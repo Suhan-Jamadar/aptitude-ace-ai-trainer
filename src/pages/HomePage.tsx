@@ -33,156 +33,365 @@ const HomePage = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Create shapes for aptitude theme (numbers, symbols, formulas)
-    const shapes: THREE.Mesh[] = [];
+    // Add ambient light
+    const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+    scene.add(ambientLight);
     
-    // Create number objects (1-9)
-    for (let i = 0; i < 9; i++) {
-      const geometry = new THREE.TorusGeometry(0.3, 0.1, 16, 50);
-      const material = new THREE.MeshBasicMaterial({ 
-        color: new THREE.Color(
-          i % 3 === 0 ? "#D4A72B" : i % 3 === 1 ? "#2A3C41" : "#D9B8A7"
-        ),
+    // Add directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+
+    // Create shapes for aptitude theme
+    const shapes: THREE.Mesh[] = [];
+    const mathObjects: THREE.Group[] = [];
+    
+    // Color palette based on app's theme
+    const colors = [
+      "#D4A72B", // Gold
+      "#2A3C41", // Dark Blue
+      "#1D3557", // Darker Blue
+      "#D9B8A7"  // Peach
+    ];
+    
+    // Create mathematical formulas
+    const createFormula = (type: string, position: THREE.Vector3, size: number, color: string) => {
+      const group = new THREE.Group();
+      
+      switch(type) {
+        case "pythagoras": {
+          // a² + b² = c²
+          const material = new THREE.MeshStandardMaterial({ 
+            color: new THREE.Color(color),
+            metalness: 0.3,
+            roughness: 0.6
+          });
+          
+          // Create a²
+          const aSquared = new THREE.Group();
+          const aText = createTextMesh("a", 0.15 * size, material.clone());
+          aText.position.set(0, 0, 0);
+          
+          const superscript = createTextMesh("2", 0.08 * size, material.clone());
+          superscript.position.set(0.15 * size, 0.05 * size, 0);
+          
+          aSquared.add(aText, superscript);
+          
+          // Create + sign
+          const plus = createTextMesh("+", 0.15 * size, material.clone());
+          plus.position.set(0.3 * size, 0, 0);
+          
+          // Create b²
+          const bSquared = new THREE.Group();
+          const bText = createTextMesh("b", 0.15 * size, material.clone());
+          bText.position.set(0.5 * size, 0, 0);
+          
+          const bSuperscript = createTextMesh("2", 0.08 * size, material.clone());
+          bSuperscript.position.set(0.65 * size, 0.05 * size, 0);
+          
+          bSquared.add(bText, bSuperscript);
+          
+          // Create = sign
+          const equals = createTextMesh("=", 0.15 * size, material.clone());
+          equals.position.set(0.8 * size, 0, 0);
+          
+          // Create c²
+          const cSquared = new THREE.Group();
+          const cText = createTextMesh("c", 0.15 * size, material.clone());
+          cText.position.set(1 * size, 0, 0);
+          
+          const cSuperscript = createTextMesh("2", 0.08 * size, material.clone());
+          cSuperscript.position.set(1.15 * size, 0.05 * size, 0);
+          
+          cSquared.add(cText, cSuperscript);
+          
+          group.add(aSquared, plus, bSquared, equals, cSquared);
+          break;
+        }
+        
+        case "quadratic": {
+          // ax² + bx + c = 0
+          const material = new THREE.MeshStandardMaterial({ 
+            color: new THREE.Color(color),
+            metalness: 0.3,
+            roughness: 0.6
+          });
+          
+          const elements = [
+            { text: "a", position: new THREE.Vector3(0, 0, 0), size: 0.15 * size },
+            { text: "x", position: new THREE.Vector3(0.15 * size, 0, 0), size: 0.15 * size },
+            { text: "2", position: new THREE.Vector3(0.3 * size, 0.05 * size, 0), size: 0.08 * size },
+            { text: "+", position: new THREE.Vector3(0.4 * size, 0, 0), size: 0.15 * size },
+            { text: "b", position: new THREE.Vector3(0.55 * size, 0, 0), size: 0.15 * size },
+            { text: "x", position: new THREE.Vector3(0.7 * size, 0, 0), size: 0.15 * size },
+            { text: "+", position: new THREE.Vector3(0.85 * size, 0, 0), size: 0.15 * size },
+            { text: "c", position: new THREE.Vector3(1 * size, 0, 0), size: 0.15 * size },
+            { text: "=", position: new THREE.Vector3(1.15 * size, 0, 0), size: 0.15 * size },
+            { text: "0", position: new THREE.Vector3(1.3 * size, 0, 0), size: 0.15 * size }
+          ];
+          
+          elements.forEach(element => {
+            const mesh = createTextMesh(element.text, element.size, material.clone());
+            mesh.position.copy(element.position);
+            group.add(mesh);
+          });
+          
+          break;
+        }
+        
+        case "factorial": {
+          // n! = n × (n-1) × ... × 2 × 1
+          const material = new THREE.MeshStandardMaterial({ 
+            color: new THREE.Color(color),
+            metalness: 0.3,
+            roughness: 0.6
+          });
+          
+          const elements = [
+            { text: "n", position: new THREE.Vector3(0, 0, 0), size: 0.15 * size },
+            { text: "!", position: new THREE.Vector3(0.15 * size, 0, 0), size: 0.15 * size },
+            { text: "=", position: new THREE.Vector3(0.3 * size, 0, 0), size: 0.15 * size },
+            { text: "n", position: new THREE.Vector3(0.45 * size, 0, 0), size: 0.15 * size },
+            { text: "×", position: new THREE.Vector3(0.6 * size, 0, 0), size: 0.15 * size },
+            { text: "(n-1)", position: new THREE.Vector3(0.75 * size, 0, 0), size: 0.15 * size },
+            { text: "×...", position: new THREE.Vector3(1.1 * size, 0, 0), size: 0.15 * size }
+          ];
+          
+          elements.forEach(element => {
+            const mesh = createTextMesh(element.text, element.size, material.clone());
+            mesh.position.copy(element.position);
+            group.add(mesh);
+          });
+          
+          break;
+        }
+      }
+      
+      group.position.copy(position);
+      scene.add(group);
+      mathObjects.push(group);
+      
+      return group;
+    };
+    
+    // Helper function to create text (mocked for this example)
+    const createTextMesh = (text: string, size: number, material: THREE.Material) => {
+      // In a real implementation, you'd use TextGeometry
+      // Here we just create simple boxes to represent text
+      const width = text.length * 0.1 * size;
+      const geometry = new THREE.BoxGeometry(width, size, 0.01);
+      return new THREE.Mesh(geometry, material);
+    };
+    
+    // Create number objects
+    for (let i = 0; i < 15; i++) {
+      const geometries = [
+        new THREE.TorusGeometry(0.3, 0.1, 16, 50),
+        new THREE.TetrahedronGeometry(0.3, 0),
+        new THREE.IcosahedronGeometry(0.3, 0)
+      ];
+      
+      const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+      const material = new THREE.MeshStandardMaterial({ 
+        color: new THREE.Color(colors[i % colors.length]),
+        metalness: 0.3,
+        roughness: 0.6,
         transparent: true,
-        opacity: 0.7,
+        opacity: 0.8,
       });
-      const torus = new THREE.Mesh(geometry, material);
+      
+      const mesh = new THREE.Mesh(geometry, material);
       
       // Position randomly in space
-      torus.position.x = (Math.random() - 0.5) * 10;
-      torus.position.y = (Math.random() - 0.5) * 10;
-      torus.position.z = -5 - Math.random() * 10;
+      mesh.position.x = (Math.random() - 0.5) * 15;
+      mesh.position.y = (Math.random() - 0.5) * 10;
+      mesh.position.z = -8 - Math.random() * 10;
       
-      scene.add(torus);
-      shapes.push(torus);
+      // Random rotation
+      mesh.rotation.x = Math.random() * Math.PI;
+      mesh.rotation.y = Math.random() * Math.PI;
+      
+      scene.add(mesh);
+      shapes.push(mesh);
     }
     
-    // Create symbols (plus, minus, multiply, divide)
-    const createSymbol = (type: string, position: THREE.Vector3, color: string) => {
-      let geometry;
+    // Create symbols (plus, minus, multiply, divide, etc.)
+    const createSymbol = (type: string, position: THREE.Vector3, color: string, size: number = 1) => {
+      let geometry, mesh1, mesh2, mesh3;
+      const material = new THREE.MeshStandardMaterial({ 
+        color: new THREE.Color(color),
+        metalness: 0.3,
+        roughness: 0.6,
+        transparent: true,
+        opacity: 0.8,
+      });
       
-      if (type === 'plus') {
-        geometry = new THREE.BoxGeometry(0.8, 0.2, 0.2);
-        const verticalPart = new THREE.BoxGeometry(0.2, 0.8, 0.2);
-        const material = new THREE.MeshBasicMaterial({ 
-          color: new THREE.Color(color),
-          transparent: true,
-          opacity: 0.7,
-        });
-        
-        const horizontalMesh = new THREE.Mesh(geometry, material);
-        const verticalMesh = new THREE.Mesh(verticalPart, material);
-        
-        horizontalMesh.position.copy(position);
-        verticalMesh.position.copy(position);
-        
-        scene.add(horizontalMesh);
-        scene.add(verticalMesh);
-        shapes.push(horizontalMesh, verticalMesh);
-      } else if (type === 'minus') {
-        geometry = new THREE.BoxGeometry(0.8, 0.2, 0.2);
-        const material = new THREE.MeshBasicMaterial({ 
-          color: new THREE.Color(color),
-          transparent: true,
-          opacity: 0.7,
-        });
-        
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.copy(position);
-        
-        scene.add(mesh);
-        shapes.push(mesh);
-      } else if (type === 'multiply') {
-        geometry = new THREE.BoxGeometry(0.8, 0.2, 0.2);
-        const material = new THREE.MeshBasicMaterial({ 
-          color: new THREE.Color(color),
-          transparent: true,
-          opacity: 0.7,
-        });
-        
-        const mesh1 = new THREE.Mesh(geometry, material);
-        const mesh2 = new THREE.Mesh(geometry, material);
-        
-        mesh1.position.copy(position);
-        mesh2.position.copy(position);
-        mesh1.rotation.z = Math.PI / 4;
-        mesh2.rotation.z = -Math.PI / 4;
-        
-        scene.add(mesh1);
-        scene.add(mesh2);
-        shapes.push(mesh1, mesh2);
-      } else if (type === 'divide') {
-        // Line
-        const lineGeometry = new THREE.BoxGeometry(0.8, 0.2, 0.2);
-        const dotGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-        const material = new THREE.MeshBasicMaterial({ 
-          color: new THREE.Color(color),
-          transparent: true,
-          opacity: 0.7,
-        });
-        
-        const lineMesh = new THREE.Mesh(lineGeometry, material);
-        const dotMesh1 = new THREE.Mesh(dotGeometry, material);
-        const dotMesh2 = new THREE.Mesh(dotGeometry, material);
-        
-        lineMesh.position.copy(position);
-        dotMesh1.position.set(position.x, position.y + 0.4, position.z);
-        dotMesh2.position.set(position.x, position.y - 0.4, position.z);
-        
-        scene.add(lineMesh);
-        scene.add(dotMesh1);
-        scene.add(dotMesh2);
-        shapes.push(lineMesh, dotMesh1, dotMesh2);
+      switch(type) {
+        case 'plus':
+          geometry = new THREE.BoxGeometry(0.8 * size, 0.2 * size, 0.2 * size);
+          const verticalPart = new THREE.BoxGeometry(0.2 * size, 0.8 * size, 0.2 * size);
+          mesh1 = new THREE.Mesh(geometry, material);
+          mesh2 = new THREE.Mesh(verticalPart, material);
+          mesh1.position.copy(position);
+          mesh2.position.copy(position);
+          scene.add(mesh1, mesh2);
+          shapes.push(mesh1, mesh2);
+          break;
+          
+        case 'minus':
+          geometry = new THREE.BoxGeometry(0.8 * size, 0.2 * size, 0.2 * size);
+          mesh1 = new THREE.Mesh(geometry, material);
+          mesh1.position.copy(position);
+          scene.add(mesh1);
+          shapes.push(mesh1);
+          break;
+          
+        case 'multiply':
+          geometry = new THREE.BoxGeometry(0.8 * size, 0.2 * size, 0.2 * size);
+          mesh1 = new THREE.Mesh(geometry, material);
+          mesh2 = new THREE.Mesh(geometry.clone(), material);
+          mesh1.position.copy(position);
+          mesh2.position.copy(position);
+          mesh1.rotation.z = Math.PI / 4;
+          mesh2.rotation.z = -Math.PI / 4;
+          scene.add(mesh1, mesh2);
+          shapes.push(mesh1, mesh2);
+          break;
+          
+        case 'divide':
+          const lineGeometry = new THREE.BoxGeometry(0.8 * size, 0.2 * size, 0.2 * size);
+          const dotGeometry = new THREE.SphereGeometry(0.1 * size, 16, 16);
+          mesh1 = new THREE.Mesh(lineGeometry, material);
+          mesh2 = new THREE.Mesh(dotGeometry, material);
+          mesh3 = new THREE.Mesh(dotGeometry.clone(), material);
+          mesh1.position.copy(position);
+          mesh2.position.set(position.x, position.y + 0.4 * size, position.z);
+          mesh3.position.set(position.x, position.y - 0.4 * size, position.z);
+          scene.add(mesh1, mesh2, mesh3);
+          shapes.push(mesh1, mesh2, mesh3);
+          break;
+          
+        case 'percent':
+          const circle1Geo = new THREE.TorusGeometry(0.2 * size, 0.05 * size, 16, 32);
+          const circle2Geo = circle1Geo.clone();
+          const lineGeo = new THREE.BoxGeometry(1 * size, 0.1 * size, 0.1 * size);
+          mesh1 = new THREE.Mesh(circle1Geo, material);
+          mesh2 = new THREE.Mesh(circle2Geo, material);
+          mesh3 = new THREE.Mesh(lineGeo, material);
+          mesh1.position.set(position.x - 0.3 * size, position.y + 0.3 * size, position.z);
+          mesh2.position.set(position.x + 0.3 * size, position.y - 0.3 * size, position.z);
+          mesh3.position.copy(position);
+          mesh3.rotation.z = Math.PI / 4;
+          scene.add(mesh1, mesh2, mesh3);
+          shapes.push(mesh1, mesh2, mesh3);
+          break;
+          
+        case 'sqrt':
+          const points = [
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0.2 * size, -0.4 * size, 0),
+            new THREE.Vector3(0.4 * size, 0, 0),
+            new THREE.Vector3(0.8 * size, 0, 0)
+          ];
+          const curveGeometry = new THREE.BufferGeometry().setFromPoints(points);
+          const line = new THREE.Line(curveGeometry, material);
+          line.position.copy(position);
+          scene.add(line);
+          shapes.push(line);
+          break;
       }
     };
     
-    // Create various mathematical symbols spread across the scene
-    createSymbol('plus', new THREE.Vector3(-3, 2, -8), "#D4A72B");
-    createSymbol('minus', new THREE.Vector3(3, -2, -10), "#2A3C41");
-    createSymbol('multiply', new THREE.Vector3(2, 3, -12), "#D9B8A7");
-    createSymbol('divide', new THREE.Vector3(-2, -3, -7), "#D4A72B");
-    createSymbol('plus', new THREE.Vector3(4, 1, -15), "#D9B8A7");
+    // Create mathematical formulas
+    createFormula("pythagoras", new THREE.Vector3(-4, 2, -10), 1, colors[0]);
+    createFormula("quadratic", new THREE.Vector3(2, -2, -12), 1, colors[1]);
+    createFormula("factorial", new THREE.Vector3(-2, -3, -8), 1, colors[3]);
     
-    // Add percentage symbol (%)
-    const createPercentSymbol = (position: THREE.Vector3, color: string) => {
-      const material = new THREE.MeshBasicMaterial({ 
+    // Create various mathematical symbols
+    createSymbol('plus', new THREE.Vector3(-5, 3, -15), colors[0], 0.8);
+    createSymbol('minus', new THREE.Vector3(5, 2, -10), colors[1], 0.8);
+    createSymbol('multiply', new THREE.Vector3(4, -3, -8), colors[2], 0.8);
+    createSymbol('divide', new THREE.Vector3(-3, -1, -12), colors[3], 0.8);
+    createSymbol('percent', new THREE.Vector3(3, 4, -13), colors[0], 0.8);
+    createSymbol('sqrt', new THREE.Vector3(-1, 3, -9), colors[2], 1.2);
+    
+    // Create floating 3D numbers
+    const createFloatingNumber = (value: number, position: THREE.Vector3, color: string, size: number = 1) => {
+      // In a real implementation, you'd use TextGeometry
+      // Here we create a simple box to represent a number
+      const geometry = new THREE.BoxGeometry(0.5 * size, 0.8 * size, 0.1 * size);
+      const material = new THREE.MeshStandardMaterial({
         color: new THREE.Color(color),
+        metalness: 0.3,
+        roughness: 0.6,
         transparent: true,
-        opacity: 0.7,
+        opacity: 0.8
       });
       
-      // First circle
-      const circle1 = new THREE.Mesh(
-        new THREE.RingGeometry(0.1, 0.2, 16),
-        material
-      );
-      circle1.position.set(position.x - 0.2, position.y + 0.2, position.z);
-      
-      // Second circle
-      const circle2 = new THREE.Mesh(
-        new THREE.RingGeometry(0.1, 0.2, 16),
-        material
-      );
-      circle2.position.set(position.x + 0.2, position.y - 0.2, position.z);
-      
-      // Line
-      const line = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 0.1, 0.1),
-        material
-      );
-      line.position.copy(position);
-      line.rotation.z = Math.PI / 4;
-      
-      scene.add(circle1);
-      scene.add(circle2);
-      scene.add(line);
-      shapes.push(circle1, circle2, line);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(position);
+      scene.add(mesh);
+      shapes.push(mesh);
     };
     
-    createPercentSymbol(new THREE.Vector3(0, 0, -9), "#2A3C41");
+    // Add some 3D numbers
+    for (let i = 0; i < 10; i++) {
+      createFloatingNumber(
+        Math.floor(Math.random() * 10),
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 12,
+          (Math.random() - 0.5) * 8,
+          -10 - Math.random() * 10
+        ),
+        colors[Math.floor(Math.random() * colors.length)],
+        0.7
+      );
+    }
     
     // Position camera
     camera.position.z = 5;
+    
+    // Mouse interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let isDragging = false;
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+    
+    window.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+    });
+    
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+    
+    window.addEventListener('mousemove', (e) => {
+      // Update normalized mouse position for raycaster
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      
+      // Rotate objects based on mouse movement when dragging
+      if (isDragging) {
+        const deltaX = e.clientX - prevMouseX;
+        const deltaY = e.clientY - prevMouseY;
+        
+        shapes.forEach(shape => {
+          shape.rotation.y += deltaX * 0.005;
+          shape.rotation.x += deltaY * 0.005;
+        });
+        
+        mathObjects.forEach(obj => {
+          obj.rotation.y += deltaX * 0.001;
+          obj.rotation.x += deltaY * 0.001;
+        });
+        
+        prevMouseX = e.clientX;
+        prevMouseY = e.clientY;
+      }
+    });
     
     // Animation loop
     let animationFrameId: number;
@@ -190,13 +399,35 @@ const HomePage = () => {
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
       
+      // Update raycaster and check for intersections
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(shapes);
+      
+      if (intersects.length > 0) {
+        // Highlight intersected objects
+        const object = intersects[0].object;
+        if (object.material instanceof THREE.Material) {
+          object.material.emissive = new THREE.Color(0x222222);
+        }
+      }
+      
       // Rotate all shapes slightly
       shapes.forEach((shape, index) => {
-        shape.rotation.x += 0.002;
-        shape.rotation.y += 0.003;
+        if (!isDragging) {
+          shape.rotation.x += 0.002;
+          shape.rotation.y += 0.003;
+        }
         
         // Make them float up and down with different phases
         shape.position.y += Math.sin(Date.now() * 0.001 + index * 0.5) * 0.003;
+      });
+      
+      // Rotate math formulas
+      mathObjects.forEach((obj, index) => {
+        if (!isDragging) {
+          obj.rotation.y += 0.001;
+        }
+        obj.position.y += Math.sin(Date.now() * 0.0005 + index * 0.5) * 0.002;
       });
       
       renderer.render(scene, camera);
@@ -218,13 +449,32 @@ const HomePage = () => {
     // Cleanup on unmount
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousedown', () => {});
+      window.removeEventListener('mouseup', () => {});
+      window.removeEventListener('mousemove', () => {});
       cancelAnimationFrame(animationFrameId);
       
       // Dispose geometries and materials
       shapes.forEach((shape) => {
         shape.geometry.dispose();
-        (shape.material as THREE.Material).dispose();
+        if (shape.material instanceof THREE.Material) {
+          shape.material.dispose();
+        } else if (Array.isArray(shape.material)) {
+          shape.material.forEach(material => material.dispose());
+        }
         scene.remove(shape);
+      });
+      
+      mathObjects.forEach(obj => {
+        scene.remove(obj);
+        obj.children.forEach(child => {
+          if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            if (child.material instanceof THREE.Material) {
+              child.material.dispose();
+            }
+          }
+        });
       });
       
       renderer.dispose();

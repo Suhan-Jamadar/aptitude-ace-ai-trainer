@@ -1,4 +1,5 @@
 
+
 // User types
 export interface User {
   id: string;
@@ -26,6 +27,8 @@ export interface Topic {
   score: number;
   isUnlocked: boolean;
   recommendation?: string;
+  attempts?: number;
+  avgTime?: number; // in seconds
 }
 
 // Quiz types
@@ -63,3 +66,4 @@ export interface Progress {
   averageScore: number;
   grandTestUnlocked: boolean;
 }
+

@@ -7,10 +7,13 @@ import {
   BookOpen, 
   TrendingUp, 
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
+import QuizPractice from "@/components/Quiz/QuizPractice";
 
 // Mock topics data
 const mockTopics: Topic[] = [
@@ -23,7 +26,9 @@ const mockTopics: Topic[] = [
     completedQuestions: 15,
     score: 80,
     isUnlocked: true,
-    recommendation: "Check out GeeksforGeeks for number series patterns: https://www.geeksforgeeks.org/number-series-formulas/"
+    recommendation: "Check out GeeksforGeeks for number series patterns: https://www.geeksforgeeks.org/number-series-formulas/",
+    attempts: 3,
+    avgTime: 45 // in seconds
   },
   {
     id: "2",
@@ -34,7 +39,9 @@ const mockTopics: Topic[] = [
     completedQuestions: 10,
     score: 75,
     isUnlocked: true,
-    recommendation: "Practice more on time and work problems at Medium: https://medium.com/tag/aptitude"
+    recommendation: "Practice more on time and work problems at Medium: https://medium.com/tag/aptitude",
+    attempts: 2,
+    avgTime: 60
   },
   {
     id: "3",
@@ -45,7 +52,9 @@ const mockTopics: Topic[] = [
     completedQuestions: 5,
     score: 60,
     isUnlocked: true,
-    recommendation: "Review percentage shortcuts at GeeksforGeeks: https://www.geeksforgeeks.org/percentages-formulas/"
+    recommendation: "Review percentage shortcuts at GeeksforGeeks: https://www.geeksforgeeks.org/percentages-formulas/",
+    attempts: 1,
+    avgTime: 55
   },
   {
     id: "4",
@@ -55,7 +64,9 @@ const mockTopics: Topic[] = [
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
-    isUnlocked: true
+    isUnlocked: true,
+    attempts: 0,
+    avgTime: 0
   },
   {
     id: "5",
@@ -65,7 +76,9 @@ const mockTopics: Topic[] = [
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
-    isUnlocked: false
+    isUnlocked: false,
+    attempts: 0,
+    avgTime: 0
   }
 ];
 
@@ -78,6 +91,8 @@ const TopicCard = ({ topic }: { topic: Topic }) => {
     "bar-chart-2": <BarChart2 className="h-6 w-6" />,
     "pie-chart": <BookOpen className="h-6 w-6" />
   };
+
+  const [showPractice, setShowPractice] = useState(false);
 
   return (
     <div className={`
@@ -109,11 +124,20 @@ const TopicCard = ({ topic }: { topic: Topic }) => {
             <span>Progress</span>
             <span>{topic.completedQuestions}/{topic.totalQuestions}</span>
           </div>
-          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-custom-gold to-custom-peach transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            ></div>
+          <Progress 
+            value={progress} 
+            className="h-2 bg-gray-200" 
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-4 text-sm text-gray-600">
+          <div className="flex items-center bg-gray-100 px-2 py-1 rounded-md">
+            <Clock className="h-3 w-3 mr-1 text-custom-darkBlue2" />
+            <span>{topic.attempts > 0 ? `${topic.avgTime}s avg` : 'No attempts'}</span>
+          </div>
+          <div className="flex items-center bg-gray-100 px-2 py-1 rounded-md">
+            <span className="font-medium mr-1">{topic.attempts}</span>
+            <span>{topic.attempts === 1 ? 'attempt' : 'attempts'}</span>
           </div>
         </div>
         
@@ -125,22 +149,24 @@ const TopicCard = ({ topic }: { topic: Topic }) => {
           </div>
         )}
         
-        <div className="flex justify-between">
+        <div className="flex justify-center">
           <Button
-            variant="outline"
-            className="text-custom-darkBlue1 border-custom-darkBlue1 hover:bg-custom-darkBlue1 hover:text-white"
+            className="w-full bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
             disabled={!topic.isUnlocked}
+            onClick={() => setShowPractice(true)}
           >
             Practice
           </Button>
-          <Button
-            className="bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
-            disabled={!topic.isUnlocked}
-          >
-            Start Quiz
-          </Button>
         </div>
       </div>
+
+      {showPractice && (
+        <QuizPractice 
+          topicId={topic.id} 
+          topicName={topic.name} 
+          onClose={() => setShowPractice(false)} 
+        />
+      )}
     </div>
   );
 };
@@ -187,17 +213,6 @@ const AptitudePage = () => {
           {mockTopics.map((topic) => (
             <TopicCard key={topic.id} topic={topic} />
           ))}
-          
-          {/* Add New Topic Card */}
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden shadow border-2 border-dashed border-gray-300 flex flex-col items-center justify-center p-6 text-center hover:bg-white/70 transition-all duration-300 cursor-pointer min-h-[320px]">
-            <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-              <span className="text-3xl text-gray-500">+</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Add New Topic</h3>
-            <p className="text-gray-500">
-              Create a custom topic or add from our library
-            </p>
-          </div>
         </div>
       </div>
     </MainLayout>
