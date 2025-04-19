@@ -49,7 +49,6 @@ const GrandTestPage = () => {
   const [timeRemaining, setTimeRemaining] = useState(45 * 60); // 45 minutes in seconds
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Initialize test timer
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
@@ -65,17 +64,6 @@ const GrandTestPage = () => {
     return () => clearInterval(timer);
   }, []);
   
-  // Show 10 minute warning
-  useEffect(() => {
-    if (timeRemaining === 600) { // 10 minutes left
-      toast({
-        title: "10 minutes remaining!",
-        description: "You have 10 minutes left to complete the Grand Test.",
-        variant: "destructive"
-      });
-    }
-  }, [timeRemaining]);
-  
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -84,7 +72,18 @@ const GrandTestPage = () => {
   
   const handleAnswerSubmit = (isCorrect: boolean) => {
     if (isCorrect) {
-      setScore(score + 1);
+      setScore(score + 2); // +2 points for correct answer
+      toast({
+        title: "Correct!",
+        description: "+2 points",
+      });
+    } else {
+      setScore(Math.max(0, score - 1)); // -1 point for incorrect answer, minimum 0
+      toast({
+        title: "Incorrect",
+        description: "-1 point",
+        variant: "destructive"
+      });
     }
   };
   
@@ -101,7 +100,7 @@ const GrandTestPage = () => {
     clearInterval(timeRemaining as unknown as number);
     
     // Calculate final score
-    const finalScore = (score / grandTestQuestions.length) * 100;
+    const finalScore = (score / (grandTestQuestions.length * 2)) * 100; // Adjusted for new scoring
     const isPassed = finalScore >= 70;
     
     toast({
@@ -113,7 +112,7 @@ const GrandTestPage = () => {
     });
   };
   
-  const handleSubmitTest = () => {
+  const handleFinishTest = () => {
     setIsSubmitting(true);
     setTimeout(() => {
       handleTestCompletion();
@@ -162,18 +161,25 @@ const GrandTestPage = () => {
               totalQuestions={grandTestQuestions.length}
             />
             
-            {currentQuestionIndex === grandTestQuestions.length - 1 && (
-              <div className="mt-6 flex justify-center">
+            <div className="mt-6 flex justify-center gap-4">
+              {currentQuestionIndex === grandTestQuestions.length - 1 && (
                 <Button 
                   className="bg-custom-darkBlue1 hover:bg-custom-darkBlue2 text-white"
-                  onClick={handleSubmitTest}
+                  onClick={handleFinishTest}
                   disabled={isSubmitting}
                 >
                   Submit Test
                   {isSubmitting && <span className="ml-2 animate-spin">...</span>}
                 </Button>
-              </div>
-            )}
+              )}
+              <Button
+                variant="outline"
+                onClick={handleFinishTest}
+                className="border-custom-darkBlue1 text-custom-darkBlue1 hover:bg-custom-darkBlue1 hover:text-white"
+              >
+                Finish Quiz Early
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">

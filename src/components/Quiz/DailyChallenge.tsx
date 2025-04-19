@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Question } from "@/types";
 import QuizQuestion from "./QuizQuestion";
-import { X, Trophy } from "lucide-react";
+import { Clock, X, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 // Mock daily challenge questions
@@ -59,44 +59,52 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [startTime, setStartTime] = useState(Date.now());
-  const [timeSpent, setTimeSpent] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(5 * 60); // 5 minutes in seconds
   const [streakIncreased, setStreakIncreased] = useState(false);
 
   useEffect(() => {
-    setStartTime(Date.now());
-
-    // Update time spent
     const timer = setInterval(() => {
-      setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsCompleted(true);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [startTime]);
+  }, []);
 
-  const handleAnswerSubmit = (isCorrect: boolean) => {
-    if (isCorrect) {
-      setScore(score + 1);
-    }
-  };
-
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < dailyChallengeQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      setIsCompleted(true);
-      if (score >= 3) {
-        setStreakIncreased(true);
-        toast.success("Daily streak increased!");
-      }
-    }
-  };
-
-  // Format time as mm:ss
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleAnswerSubmit = (isCorrect: boolean) => {
+    if (isCorrect) {
+      setScore(score + 2); // +2 points for correct answer
+      toast.success("+2 points!");
+    } else {
+      setScore(Math.max(0, score - 1)); // -1 point for incorrect answer, minimum 0
+      toast.error("-1 point");
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (timeRemaining > 0) {
+      // Generate a random question from the pool
+      const randomIndex = Math.floor(Math.random() * dailyChallengeQuestions.length);
+      setCurrentQuestionIndex(randomIndex);
+    } else {
+      setIsCompleted(true);
+      if (score >= 6) { // Adjusted threshold for streak
+        setStreakIncreased(true);
+        toast.success("Daily streak increased!");
+      }
+    }
   };
 
   return (
@@ -114,8 +122,11 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
         {!isCompleted ? (
           <div>
             <div className="flex justify-between text-sm text-gray-500 mb-2">
-              <span>Question {currentQuestionIndex + 1} of {dailyChallengeQuestions.length}</span>
-              <span>Time: {formatTime(timeSpent)}</span>
+              <span>Question {currentQuestionIndex + 1}</span>
+              <div className={`flex items-center ${timeRemaining < 60 ? 'text-red-500 animate-pulse' : ''}`}>
+                <Clock className={`h-4 w-4 mr-1 ${timeRemaining < 60 ? 'text-red-500' : ''}`} />
+                <span>Time remaining: {formatTime(timeRemaining)}</span>
+              </div>
             </div>
 
             <QuizQuestion
