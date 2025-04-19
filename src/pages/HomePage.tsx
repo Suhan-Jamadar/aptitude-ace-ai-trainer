@@ -44,6 +44,7 @@ const HomePage = () => {
 
     // Create shapes for aptitude theme
     const shapes: THREE.Mesh[] = [];
+    const otherObjects: THREE.Object3D[] = []; // Store non-mesh objects here
     const mathObjects: THREE.Group[] = [];
     
     // Color palette based on app's theme
@@ -287,17 +288,39 @@ const HomePage = () => {
           break;
           
         case 'sqrt':
+          // For sqrt, instead of using Line which causes TypeScript issues,
+          // we'll use small cube meshes to create the square root symbol
+          const segmentCount = 10;
           const points = [
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0.2 * size, -0.4 * size, 0),
             new THREE.Vector3(0.4 * size, 0, 0),
             new THREE.Vector3(0.8 * size, 0, 0)
           ];
-          const curveGeometry = new THREE.BufferGeometry().setFromPoints(points);
-          const line = new THREE.Line(curveGeometry, material);
-          line.position.copy(position);
-          scene.add(line);
-          shapes.push(line);
+          
+          // Create small segments to form the shape
+          for (let i = 0; i < segmentCount - 1; i++) {
+            const start = points[Math.floor(i / (segmentCount / points.length))];
+            const end = points[Math.ceil(i / (segmentCount / points.length))];
+            
+            const t = (i % (segmentCount / points.length)) / (segmentCount / points.length);
+            const segmentStart = new THREE.Vector3().lerpVectors(start, end, t);
+            const segmentEnd = new THREE.Vector3().lerpVectors(start, end, t + 1 / segmentCount);
+            
+            const direction = new THREE.Vector3().subVectors(segmentEnd, segmentStart);
+            const length = direction.length();
+            
+            const segmentGeo = new THREE.BoxGeometry(length, 0.05 * size, 0.05 * size);
+            const segmentMesh = new THREE.Mesh(segmentGeo, material.clone());
+            
+            segmentMesh.position.copy(segmentStart.clone().add(direction.multiplyScalar(0.5)));
+            segmentMesh.lookAt(segmentEnd);
+            
+            segmentMesh.position.add(position);
+            
+            scene.add(segmentMesh);
+            shapes.push(segmentMesh);
+          }
           break;
       }
     };
@@ -404,9 +427,9 @@ const HomePage = () => {
       const intersects = raycaster.intersectObjects(shapes);
       
       if (intersects.length > 0) {
-        // Highlight intersected objects
+        // Highlight intersected objects - need type checking
         const object = intersects[0].object;
-        if (object.material instanceof THREE.Material) {
+        if (object instanceof THREE.Mesh && object.material instanceof THREE.Material) {
           object.material.emissive = new THREE.Color(0x222222);
         }
       }
