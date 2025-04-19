@@ -8,12 +8,16 @@ import {
   TrendingUp, 
   Calendar,
   ArrowRight,
-  Clock
+  Clock,
+  Percent,
+  PieChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { motion } from "framer-motion";
 import QuizPractice from "@/components/Quiz/QuizPractice";
+import DailyChallenge from "@/components/Quiz/DailyChallenge";
 
 // Mock topics data
 const mockTopics: Topic[] = [
@@ -76,7 +80,7 @@ const mockTopics: Topic[] = [
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
-    isUnlocked: false,
+    isUnlocked: true, // Changed to true so the topic is functional
     attempts: 0,
     avgTime: 0
   }
@@ -87,19 +91,24 @@ const TopicCard = ({ topic }: { topic: Topic }) => {
   const iconMap = {
     "trending-up": <TrendingUp className="h-6 w-6" />,
     "calendar": <Calendar className="h-6 w-6" />,
-    "percent": <span className="text-xl font-bold">%</span>,
+    "percent": <Percent className="h-6 w-6" />,
     "bar-chart-2": <BarChart2 className="h-6 w-6" />,
-    "pie-chart": <BookOpen className="h-6 w-6" />
+    "pie-chart": <PieChart className="h-6 w-6" />
   };
 
   const [showPractice, setShowPractice] = useState(false);
 
   return (
-    <div className={`
-      bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl
-      transition-all duration-300 transform hover:-translate-y-1
-      ${!topic.isUnlocked ? "opacity-75 grayscale" : ""}
-    `}>
+    <motion.div 
+      className={`
+        bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl
+        transition-all duration-300 transform hover:-translate-y-1
+        ${!topic.isUnlocked ? "opacity-75 grayscale" : ""}
+      `}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: Number(topic.id) * 0.1 }}
+    >
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center">
@@ -167,11 +176,12 @@ const TopicCard = ({ topic }: { topic: Topic }) => {
           onClose={() => setShowPractice(false)} 
         />
       )}
-    </div>
+    </motion.div>
   );
 };
 
 const AptitudePage = () => {
+  const [showDailyChallenge, setShowDailyChallenge] = useState(false);
   const completedTopics = mockTopics.filter(topic => topic.completedQuestions > 0).length;
   const totalTopics = mockTopics.length;
   const progress = (completedTopics / totalTopics) * 100;
@@ -179,7 +189,12 @@ const AptitudePage = () => {
   
   return (
     <MainLayout showSidebar={true}>
-      <div className="container mx-auto px-4 py-8">
+      <motion.div 
+        className="container mx-auto px-4 py-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-custom-darkBlue1 mb-2">Aptitude Training</h1>
           <p className="text-gray-600">
@@ -187,8 +202,39 @@ const AptitudePage = () => {
           </p>
         </div>
         
+        <motion.div 
+          className="mb-8 p-6 rounded-xl border shadow-sm bg-white"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-custom-darkBlue1 mb-2">
+                Daily Challenge
+              </h2>
+              <p className="text-gray-600 mb-4 md:mb-0">
+                Test your knowledge with a mixed set of questions from all topics.
+                Complete the daily challenge to maintain your streak!
+              </p>
+            </div>
+            <Button 
+              className="bg-custom-darkBlue1 text-white hover:bg-custom-darkBlue2 min-w-[180px]"
+              onClick={() => setShowDailyChallenge(true)}
+            >
+              Start Today's Challenge
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </motion.div>
+        
         {allTopicsPassed && (
-          <div className="mb-8 bg-gradient-to-r from-custom-gold/20 to-custom-peach/20 p-6 rounded-xl border border-custom-gold/30 animate-fade-in">
+          <motion.div 
+            className="mb-8 bg-gradient-to-r from-custom-gold/20 to-custom-peach/20 p-6 rounded-xl border border-custom-gold/30"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-custom-darkBlue1 mb-2">
@@ -206,7 +252,7 @@ const AptitudePage = () => {
                 </Button>
               </Link>
             </div>
-          </div>
+          </motion.div>
         )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -214,7 +260,11 @@ const AptitudePage = () => {
             <TopicCard key={topic.id} topic={topic} />
           ))}
         </div>
-      </div>
+      </motion.div>
+
+      {showDailyChallenge && (
+        <DailyChallenge onClose={() => setShowDailyChallenge(false)} />
+      )}
     </MainLayout>
   );
 };
