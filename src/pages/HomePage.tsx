@@ -288,9 +288,10 @@ const HomePage = () => {
           break;
           
         case 'sqrt':
-          // For sqrt, instead of using Line which causes TypeScript issues,
-          // we'll use small cube meshes to create the square root symbol
-          const segmentCount = 10;
+          // Fixed version of sqrt symbol creation that doesn't use lerpVectors
+          // We'll create the square root symbol using individual cubes
+
+          // Define the points for the square root symbol
           const points = [
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0.2 * size, -0.4 * size, 0),
@@ -298,29 +299,44 @@ const HomePage = () => {
             new THREE.Vector3(0.8 * size, 0, 0)
           ];
           
-          // Create small segments to form the shape
-          for (let i = 0; i < segmentCount - 1; i++) {
-            const start = points[Math.floor(i / (segmentCount / points.length))];
-            const end = points[Math.ceil(i / (segmentCount / points.length))];
-            
-            const t = (i % (segmentCount / points.length)) / (segmentCount / points.length);
-            const segmentStart = new THREE.Vector3().lerpVectors(start, end, t);
-            const segmentEnd = new THREE.Vector3().lerpVectors(start, end, t + 1 / segmentCount);
-            
-            const direction = new THREE.Vector3().subVectors(segmentEnd, segmentStart);
-            const length = direction.length();
-            
-            const segmentGeo = new THREE.BoxGeometry(length, 0.05 * size, 0.05 * size);
-            const segmentMesh = new THREE.Mesh(segmentGeo, material.clone());
-            
-            segmentMesh.position.copy(segmentStart.clone().add(direction.multiplyScalar(0.5)));
-            segmentMesh.lookAt(segmentEnd);
-            
-            segmentMesh.position.add(position);
-            
-            scene.add(segmentMesh);
-            shapes.push(segmentMesh);
-          }
+          // Create the first segment (from origin to bottom point)
+          const segment1Geo = new THREE.BoxGeometry(0.05 * size, 0.4 * size, 0.05 * size);
+          const segment1 = new THREE.Mesh(segment1Geo, material.clone());
+          segment1.position.set(
+            points[0].x + (points[1].x - points[0].x) / 2,
+            points[0].y + (points[1].y - points[0].y) / 2,
+            points[0].z
+          );
+          segment1.rotation.z = Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x);
+          segment1.position.add(position);
+          scene.add(segment1);
+          shapes.push(segment1);
+          
+          // Create the second segment (from bottom to middle)
+          const segment2Geo = new THREE.BoxGeometry(0.25 * size, 0.05 * size, 0.05 * size);
+          const segment2 = new THREE.Mesh(segment2Geo, material.clone());
+          segment2.position.set(
+            points[1].x + (points[2].x - points[1].x) / 2,
+            points[1].y + (points[2].y - points[1].y) / 2,
+            points[1].z
+          );
+          segment2.rotation.z = Math.atan2(points[2].y - points[1].y, points[2].x - points[1].x);
+          segment2.position.add(position);
+          scene.add(segment2);
+          shapes.push(segment2);
+          
+          // Create the third segment (from middle to end)
+          const segment3Geo = new THREE.BoxGeometry(0.4 * size, 0.05 * size, 0.05 * size);
+          const segment3 = new THREE.Mesh(segment3Geo, material.clone());
+          segment3.position.set(
+            points[2].x + (points[3].x - points[2].x) / 2,
+            points[2].y + (points[3].y - points[2].y) / 2,
+            points[2].z
+          );
+          segment3.position.add(position);
+          scene.add(segment3);
+          shapes.push(segment3);
+          
           break;
       }
     };
