@@ -429,8 +429,14 @@ const HomePage = () => {
       if (intersects.length > 0) {
         // Highlight intersected objects - need type checking
         const object = intersects[0].object;
-        if (object instanceof THREE.Mesh && object.material instanceof THREE.Material) {
-          object.material.emissive = new THREE.Color(0x222222);
+        if (object instanceof THREE.Mesh) {
+          // Check if material has emissive property (like MeshStandardMaterial)
+          const material = object.material as THREE.Material;
+          if (material instanceof THREE.MeshStandardMaterial || 
+              material instanceof THREE.MeshPhongMaterial || 
+              material instanceof THREE.MeshLambertMaterial) {
+            material.emissive.set(0x222222);
+          }
         }
       }
       
