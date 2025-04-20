@@ -1,15 +1,17 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   User,
   BookOpen,
   BarChart2,
   Calendar,
   TrendingUp,
+  Search,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Topic } from "@/types";
 
 interface SidebarProps {
@@ -18,13 +20,24 @@ interface SidebarProps {
     streak: number;
     topicsCompleted: number;
     totalTopics: number;
+    username?: string;
   };
 }
 
 const Sidebar = ({ topics, userProgress }: SidebarProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const progressPercentage = (userProgress.topicsCompleted / userProgress.totalTopics) * 100;
+  
+  const filteredTopics = topics.filter(topic => 
+    topic.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleStartChallenge = () => {
+    navigate("/aptitude/daily-challenge");
+  };
 
   return (
     <div
@@ -32,6 +45,7 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
         isSidebarOpen ? "w-64" : "w-20"
       } bg-custom-darkBlue1 text-white fixed left-0 top-0 pt-20 shadow-xl`}
     >
+      {/* Collapse Button */}
       <Button
         variant="ghost"
         size="icon"
@@ -51,28 +65,60 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
           <div className="w-16 h-16 rounded-full bg-custom-gold/20 flex items-center justify-center">
             <User className="h-8 w-8 text-custom-gold" />
           </div>
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-custom-gold text-custom-darkBlue1 flex items-center justify-center text-xs font-bold">
-            {userProgress.streak}
-          </div>
         </div>
-        {isSidebarOpen && (
+        {isSidebarOpen && userProgress.username && (
           <div className="mt-4 text-center">
-            <p className="text-sm font-medium text-white">Daily Streak</p>
-            <p className="text-xs text-custom-gold">Keep it going!</p>
+            <p className="text-sm font-medium text-white">{userProgress.username}</p>
           </div>
         )}
       </div>
 
+      {/* Search Bar */}
+      {isSidebarOpen && (
+        <div className="px-4 py-2">
+          <Input
+            type="text"
+            placeholder="Search topics..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-custom-darkBlue2 border-custom-gold/30 text-white placeholder:text-gray-400"
+          />
+        </div>
+      )}
+
       {/* Daily Challenge */}
       {isSidebarOpen && (
-        <div className="px-4 py-3 flex flex-col animate-fade-in">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="h-5 w-5 text-custom-gold" />
-            <h3 className="font-medium">Daily Challenge</h3>
-          </div>
-          <Button className="w-full bg-custom-gold/20 hover:bg-custom-gold/30 text-white border border-custom-gold/30">
-            Start Today's Challenge
-          </Button>
+        <div className="px-4 py-3">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="w-full bg-custom-gold/20 hover:bg-custom-gold/30 text-white border border-custom-gold/30">
+                <Calendar className="h-5 w-5 text-custom-gold mr-2" />
+                Daily Challenge
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Daily Challenge Instructions</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-gray-600">
+                  🎯 Challenge yourself with our daily quiz:
+                </p>
+                <ul className="list-disc pl-4 space-y-2 text-sm text-gray-600">
+                  <li>5 minutes to answer as many questions as possible</li>
+                  <li>+2 points for correct answers</li>
+                  <li>-1 point for incorrect answers</li>
+                  <li>Questions from various topics to test your knowledge</li>
+                </ul>
+                <Button 
+                  className="w-full bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
+                  onClick={handleStartChallenge}
+                >
+                  Start Challenge
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
 
@@ -114,7 +160,7 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
           )}
         </div>
         <div className="space-y-2">
-          {topics.map((topic) => (
+          {filteredTopics.map((topic) => (
             <Link 
               key={topic.id} 
               to={`/aptitude/topic/${topic.id}`}
@@ -131,27 +177,6 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
             </Link>
           ))}
         </div>
-      </div>
-
-      {/* Grand Test Link */}
-      <div className="px-4 py-3">
-        <Link 
-          to="/aptitude/grand-test"
-          className={`block p-3 bg-gradient-to-r from-custom-gold to-custom-gold/90 text-custom-darkBlue1 font-medium rounded-lg text-center transition-transform hover:scale-[1.02] ${
-            progressPercentage < 70 ? "opacity-50 pointer-events-none" : ""
-          }`}
-        >
-          {isSidebarOpen ? (
-            "Grand Test"
-          ) : (
-            <span className="block text-center">GT</span>
-          )}
-        </Link>
-        {isSidebarOpen && progressPercentage < 70 && (
-          <p className="text-xs text-center mt-1">
-            Complete 70% of topics to unlock
-          </p>
-        )}
       </div>
     </div>
   );

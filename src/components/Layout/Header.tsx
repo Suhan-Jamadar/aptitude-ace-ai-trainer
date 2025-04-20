@@ -1,20 +1,20 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, LogOut } from "lucide-react";
+import { User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // For demo purposes
   const location = useLocation();
 
-  const handleLogin = () => {
-    // This would be replaced with actual authentication logic
-    setIsLoggedIn(true);
-  };
-
   const handleLogout = () => {
-    // This would be replaced with actual logout logic
     setIsLoggedIn(false);
   };
 
@@ -64,35 +64,21 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center space-x-4">
-          {isLoggedIn ? (
-            <div className="flex items-center space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button className="rounded-full w-10 h-10 bg-custom-gold text-custom-darkBlue1 p-0" variant="outline">
                 <User className="h-5 w-5" />
               </Button>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-custom-gold"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex space-x-2">
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-custom-gold"
-                onClick={handleLogin}
-              >
-                Login
-              </Button>
-              <Button 
-                className="bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
-              >
-                Sign Up
-              </Button>
-            </div>
-          )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

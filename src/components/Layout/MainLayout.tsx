@@ -63,11 +63,12 @@ const mockTopics: Topic[] = [
   }
 ];
 
-// Mock user progress
+// Mock user progress with username
 const mockUserProgress = {
   streak: 3,
   topicsCompleted: 2,
-  totalTopics: mockTopics.length
+  totalTopics: mockTopics.length,
+  username: "John Doe" // Added username
 };
 
 const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
