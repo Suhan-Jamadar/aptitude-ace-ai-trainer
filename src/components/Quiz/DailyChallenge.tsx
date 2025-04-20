@@ -61,6 +61,7 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(5 * 60); // 5 minutes in seconds
   const [streakIncreased, setStreakIncreased] = useState(false);
+  const [startTime] = useState(Date.now());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -107,6 +108,12 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
     }
   };
 
+  // Calculate time spent when challenge is completed
+  const calculateTimeSpent = () => {
+    const timeSpentInSeconds = Math.floor((Date.now() - startTime) / 1000);
+    return formatTime(Math.min(timeSpentInSeconds, 5 * 60)); // Cap at 5 minutes
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl">
@@ -145,8 +152,8 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
               <Trophy className="h-10 w-10 text-custom-gold" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Challenge Complete!</h3>
-            <p className="mb-2">You scored {score} out of {dailyChallengeQuestions.length}</p>
-            <p className="text-gray-500 mb-2">Time taken: {formatTime(timeSpent)}</p>
+            <p className="mb-2">You scored {score} points</p>
+            <p className="text-gray-500 mb-2">Time taken: {calculateTimeSpent()}</p>
             
             {streakIncreased && (
               <div className="bg-custom-gold/20 p-3 rounded-lg mb-4 animate-pulse">
