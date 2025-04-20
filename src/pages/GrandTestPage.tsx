@@ -1,13 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Question } from "@/types";
-import QuizQuestion from "@/components/Quiz/QuizQuestion";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Clock, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import Timer from "@/components/Quiz/GrandTest/Timer";
+import QuestionView from "@/components/Quiz/GrandTest/QuestionView";
+import ResultView from "@/components/Quiz/GrandTest/ResultView";
 
 // Mock grand test questions - mix of different topics
 const grandTestQuestions: Question[] = [
@@ -64,34 +64,24 @@ const GrandTestPage = () => {
     return () => clearInterval(timer);
   }, []);
   
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-  
   const handleAnswerSubmit = (isCorrect: boolean) => {
     if (isCorrect) {
-      setScore(score + 2); // +2 points for correct answer
+      setScore(score + 2);
       toast({
         title: "Correct!",
         description: "+2 points",
       });
     } else {
-      setScore(Math.max(0, score - 1)); // -1 point for incorrect answer, minimum 0
+      setScore(Math.max(0, score - 1));
       toast({
         title: "Incorrect",
         description: "-1 point",
         variant: "destructive"
       });
     }
-  };
-  
-  const handleNextQuestion = () => {
+    
     if (currentQuestionIndex < grandTestQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      handleTestCompletion();
     }
   };
   
@@ -99,8 +89,7 @@ const GrandTestPage = () => {
     setIsTestCompleted(true);
     clearInterval(timeRemaining as unknown as number);
     
-    // Calculate final score
-    const finalScore = (score / (grandTestQuestions.length * 2)) * 100; // Adjusted for new scoring
+    const finalScore = (score / (grandTestQuestions.length * 2)) * 100;
     const isPassed = finalScore >= 70;
     
     toast({
@@ -119,6 +108,13 @@ const GrandTestPage = () => {
       setIsSubmitting(false);
     }, 1000);
   };
+
+  const handleRetry = () => {
+    setScore(0);
+    setCurrentQuestionIndex(0);
+    setIsTestCompleted(false);
+    setTimeRemaining(45 * 60);
+  };
   
   return (
     <MainLayout showSidebar={true}>
@@ -136,82 +132,21 @@ const GrandTestPage = () => {
         </div>
         
         {!isTestCompleted ? (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <div className="flex justify-between items-center mb-6">
-              <div className="text-sm font-medium text-gray-500">
-                Question {currentQuestionIndex + 1} of {grandTestQuestions.length}
-              </div>
-              <div className={`flex items-center text-sm font-medium ${timeRemaining < 300 ? 'text-red-500 animate-pulse' : 'text-gray-500'}`}>
-                <Clock className={`h-4 w-4 mr-1 ${timeRemaining < 300 ? 'text-red-500' : ''}`} />
-                <span>Time remaining: {formatTime(timeRemaining)}</span>
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <Progress 
-                value={(currentQuestionIndex / grandTestQuestions.length) * 100} 
-                className="h-2 bg-gray-200"
-              />
-            </div>
-            
-            <QuizQuestion
-              question={grandTestQuestions[currentQuestionIndex]}
-              onAnswerSubmit={handleAnswerSubmit}
-              questionNumber={currentQuestionIndex + 1}
-              totalQuestions={grandTestQuestions.length}
-            />
-            
-            <div className="mt-6 flex justify-center gap-4">
-              {currentQuestionIndex === grandTestQuestions.length - 1 && (
-                <Button 
-                  className="bg-custom-darkBlue1 hover:bg-custom-darkBlue2 text-white"
-                  onClick={handleFinishTest}
-                  disabled={isSubmitting}
-                >
-                  Submit Test
-                  {isSubmitting && <span className="ml-2 animate-spin">...</span>}
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={handleFinishTest}
-                className="border-custom-darkBlue1 text-custom-darkBlue1 hover:bg-custom-darkBlue1 hover:text-white"
-              >
-                Finish Quiz Early
-              </Button>
-            </div>
-          </div>
+          <QuestionView
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestions={grandTestQuestions.length}
+            question={grandTestQuestions[currentQuestionIndex]}
+            timeRemaining={timeRemaining}
+            onAnswerSubmit={handleAnswerSubmit}
+            onFinishTest={handleFinishTest}
+            isSubmitting={isSubmitting}
+          />
         ) : (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4 text-custom-darkBlue1">Test Completed!</h2>
-            <p className="text-lg mb-2">
-              Your score: <span className="font-bold">{Math.round((score / grandTestQuestions.length) * 100)}%</span>
-            </p>
-            <p className="text-gray-600 mb-6">
-              You answered {score} out of {grandTestQuestions.length} questions correctly.
-            </p>
-            
-            <div className="flex justify-center">
-              <Button 
-                className="bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90 mr-4"
-                onClick={() => navigate("/aptitude")}
-              >
-                Back to Topics
-              </Button>
-              <Button 
-                variant="outline"
-                className="border-custom-darkBlue1 text-custom-darkBlue1 hover:bg-custom-darkBlue1 hover:text-white"
-                onClick={() => {
-                  setScore(0);
-                  setCurrentQuestionIndex(0);
-                  setIsTestCompleted(false);
-                  setTimeRemaining(45 * 60);
-                }}
-              >
-                Try Again
-              </Button>
-            </div>
-          </div>
+          <ResultView
+            score={score}
+            totalQuestions={grandTestQuestions.length}
+            onRetry={handleRetry}
+          />
         )}
         
         {timeRemaining < 300 && !isTestCompleted && (
