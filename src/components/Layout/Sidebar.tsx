@@ -69,6 +69,9 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
         {isSidebarOpen && userProgress.username && (
           <div className="mt-4 text-center">
             <p className="text-sm font-medium text-white">{userProgress.username}</p>
+            <div className="mt-2 flex items-center justify-center text-custom-gold">
+              <span className="text-sm">🔥 {userProgress.streak} day streak</span>
+            </div>
           </div>
         )}
       </div>

@@ -1,9 +1,7 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
 
 interface SignupFormProps {
@@ -16,7 +14,6 @@ const SignupForm = ({ onSignup, onSwitchToLogin }: SignupFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -108,32 +105,10 @@ const SignupForm = ({ onSignup, onSwitchToLogin }: SignupFormProps) => {
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="terms" 
-            checked={agreeTerms}
-            onCheckedChange={(checked) => setAgreeTerms(checked === true)}
-            required
-          />
-          <label
-            htmlFor="terms"
-            className="text-sm text-gray-500 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            I agree to the{" "}
-            <a href="#" className="text-custom-gold hover:underline">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a href="#" className="text-custom-gold hover:underline">
-              Privacy Policy
-            </a>
-          </label>
-        </div>
-        
         <Button 
           type="submit" 
           className="w-full bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90 py-6"
-          disabled={isLoading || !agreeTerms}
+          disabled={isLoading}
         >
           {isLoading ? (
             <span className="flex items-center">
