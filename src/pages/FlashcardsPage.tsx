@@ -1,17 +1,15 @@
-
 import { useState, useRef } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Flashcard } from "@/types";
-import { Upload, File, FileText, Check, Calendar, Filter, ArrowUpDown } from "lucide-react";
+import { Upload, File, FileText, Check, Calendar, Filter, ArrowUpDown, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { isValidFile, generateFlashcardContent } from "@/utils/fileUtils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-// Mock flashcards data
 const mockFlashcards: Flashcard[] = [
   {
     id: "1",
@@ -44,6 +42,7 @@ const FlashcardsPage = () => {
   const [sortByDateAsc, setSortByDateAsc] = useState(true);
   const [filterReadOnly, setFilterReadOnly] = useState(false);
   const [selectedFlashcard, setSelectedFlashcard] = useState<Flashcard | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCheckFlashcard = (id: string) => {
@@ -93,7 +92,6 @@ const FlashcardsPage = () => {
     
     setIsUploading(true);
 
-    // Simulate file upload and processing
     setTimeout(() => {
       setIsUploading(false);
       
@@ -109,7 +107,6 @@ const FlashcardsPage = () => {
       setNewFlashcardTitle("");
       toast.success("Flashcard created successfully!");
       
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -155,6 +152,11 @@ const FlashcardsPage = () => {
     ? flashcards.filter(card => card.isRead) 
     : flashcards;
 
+  const filteredFlashcards = flashcards.filter(card => 
+    card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    card.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <MainLayout>
       <motion.div 
@@ -170,7 +172,19 @@ const FlashcardsPage = () => {
           </p>
         </div>
 
-        {/* Upload Area */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search flashcards..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
         <div 
           className={`
             mb-10 border-2 border-dashed rounded-xl p-8 text-center
@@ -231,7 +245,6 @@ const FlashcardsPage = () => {
           )}
         </div>
 
-        {/* Flashcards List */}
         <div>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-custom-darkBlue1">Your Flashcards</h2>
@@ -256,12 +269,12 @@ const FlashcardsPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedFlashcards.length === 0 ? (
+            {filteredFlashcards.length === 0 ? (
               <div className="col-span-full text-center py-10 bg-gray-50 rounded-lg">
                 <p className="text-gray-500">No flashcards found.</p>
               </div>
             ) : (
-              displayedFlashcards.map((flashcard) => (
+              filteredFlashcards.map((flashcard) => (
                 <motion.div 
                   key={flashcard.id} 
                   className={`
@@ -321,7 +334,6 @@ const FlashcardsPage = () => {
         </div>
       </motion.div>
 
-      {/* Flashcard Detail Sheet */}
       {selectedFlashcard && (
         <Sheet open={!!selectedFlashcard} onOpenChange={() => setSelectedFlashcard(null)}>
           <SheetContent className="w-[90vw] sm:max-w-[600px] p-6">
