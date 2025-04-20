@@ -1,10 +1,7 @@
-
 import { ReactNode } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { Topic } from "@/types";
-import { GrandTestBanner } from "../Aptitude/GrandTestBanner";
-import { Lock } from "lucide-react";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -74,10 +71,6 @@ const mockUserProgress = {
 };
 
 const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
-  const isGrandTestUnlocked = mockTopics.every(topic => 
-    topic.isUnlocked && (topic.score >= 70 || topic.score === 0)
-  );
-
   return (
     <div className="min-h-screen flex flex-col bg-custom-lightGray">
       <Header />
@@ -99,25 +92,6 @@ const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
               </div>
               {/* Daily Challenge content goes here */}
             </div>
-          </div>
-
-          {/* Grand Test Banner */}
-          <div className="mb-8">
-            {isGrandTestUnlocked ? (
-              <GrandTestBanner />
-            ) : (
-              <div className="relative group">
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl z-10">
-                  <div className="text-center text-white">
-                    <Lock className="w-12 h-12 mx-auto mb-2 text-custom-gold animate-pulse" />
-                    <p className="text-lg font-semibold">Complete all topics with 70% or higher to unlock</p>
-                  </div>
-                </div>
-                <div className="blur-sm">
-                  <GrandTestBanner />
-                </div>
-              </div>
-            )}
           </div>
 
           {children}

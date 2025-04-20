@@ -249,6 +249,16 @@ const FlashcardsPage = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-custom-darkBlue1">Your Flashcards</h2>
             <div className="flex items-center space-x-2">
+              <div className="relative max-w-[200px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search flashcards..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <Button 
                 variant="outline" 
                 className="text-custom-darkBlue1 border-custom-darkBlue1"
