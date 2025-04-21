@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import * as THREE from "three";
@@ -547,18 +546,18 @@ const HomePage = () => {
       />
       
       <div className="relative min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center px-4 text-center">
-        <div className="max-w-4xl w-full bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl animate-fade-in">
+        <div className="max-w-4xl w-full bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-custom-darkBlue1">
-            <span className="text-custom-gold">Aptitude</span> Ace
+            <span className="text-custom-gold animate-fade-in" style={{ animationDelay: "0.2s" }}>Aptitude</span> <span className="animate-fade-in" style={{ animationDelay: "0.3s" }}>Ace</span>
           </h1>
           
-          <p className="text-xl mb-8 text-custom-darkBlue2 max-w-2xl mx-auto">
+          <p className="text-xl mb-8 text-custom-darkBlue2 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.4s" }}>
             Master aptitude skills with AI-powered training, personalized recommendations, 
             and interactive quizzes to prepare for technical interviews.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 max-w-2xl mx-auto">
-            <div className="bg-white/80 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-custom-gold animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <div className="bg-white/80 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-custom-gold animate-fade-in" style={{ animationDelay: "0.5s" }}>
               <h2 className="text-xl font-semibold mb-3 text-custom-darkBlue1">Aptitude Training</h2>
               <p className="text-custom-darkBlue2 mb-4">
                 Practice with topic-specific quizzes, track your progress, and unlock the Grand Test.
@@ -570,7 +569,7 @@ const HomePage = () => {
               </Link>
             </div>
             
-            <div className="bg-white/80 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-custom-peach animate-fade-in" style={{ animationDelay: "0.4s" }}>
+            <div className="bg-white/80 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-custom-peach animate-fade-in" style={{ animationDelay: "0.6s" }}>
               <h2 className="text-xl font-semibold mb-3 text-custom-darkBlue1">Flashcards</h2>
               <p className="text-custom-darkBlue2 mb-4">
                 Upload your notes and generate AI-powered flashcards to enhance your learning.
@@ -583,7 +582,7 @@ const HomePage = () => {
             </div>
           </div>
           
-          <div className="flex flex-col items-center animate-fade-in" style={{ animationDelay: "0.6s" }}>
+          <div className="flex flex-col items-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
             <div className="bg-custom-darkBlue1/5 rounded-lg p-6 mb-8 max-w-3xl">
               <h3 className="text-xl font-semibold text-custom-darkBlue1 mb-3">What makes Aptitude Ace special?</h3>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
