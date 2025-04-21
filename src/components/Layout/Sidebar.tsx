@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -6,7 +7,6 @@ import {
   BarChart2,
   Calendar,
   TrendingUp,
-  Search,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -30,8 +30,8 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
   const navigate = useNavigate();
 
   const progressPercentage = (userProgress.topicsCompleted / userProgress.totalTopics) * 100;
-  
-  const filteredTopics = topics.filter(topic => 
+
+  const filteredTopics = topics.filter(topic =>
     topic.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -42,35 +42,34 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
   return (
     <div
       className={`h-screen bg-sidebar flex flex-col transition-all duration-300 ${
-        isSidebarOpen ? "w-64" : "w-20"
-      } bg-custom-darkBlue1 text-white fixed left-0 top-0 pt-20 shadow-xl`}
+        isSidebarOpen ? "w-64" : "w-8"
+      } bg-custom-darkBlue1 text-white fixed left-0 top-0 pt-20 z-20 shadow-xl`}
+      style={{ minWidth: isSidebarOpen ? "16rem" : "2rem" }}
     >
-      {/* Collapse Button */}
+      {/* Collapse/Expand Button */}
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-4 right-4 text-white hover:text-custom-gold"
+        className={`absolute top-4 right-2 text-white z-30 hover:text-custom-gold px-0 focus:outline-none group`}
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
       >
-        {isSidebarOpen ? (
-          <span className="text-xl">←</span>
-        ) : (
-          <span className="text-xl">→</span>
-        )}
+        <span className="block md:hidden">{isSidebarOpen ? <span className="text-xl">←</span> : <span className="text-xl">→</span>}</span>
+        <span className="hidden md:block">{isSidebarOpen ? <span className="text-xl">←</span> : <span className="text-xl">→</span>}</span>
       </Button>
 
       {/* Profile Section */}
-      <div className="px-4 py-6 flex flex-col items-center">
+      <div className="px-1 py-6 flex flex-col items-center">
         <div className="relative">
-          <div className="w-16 h-16 rounded-full bg-custom-gold/20 flex items-center justify-center">
-            <User className="h-8 w-8 text-custom-gold" />
+          <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-custom-gold/20 flex items-center justify-center">
+            <User className="h-5 w-5 sm:h-8 sm:w-8 text-custom-gold" />
           </div>
         </div>
         {isSidebarOpen && userProgress.username && (
-          <div className="mt-4 text-center">
-            <p className="text-sm font-medium text-white">{userProgress.username}</p>
-            <div className="mt-2 flex items-center justify-center text-custom-gold">
-              <span className="text-sm">🔥 {userProgress.streak} day streak</span>
+          <div className="mt-2 text-center">
+            <p className="text-xs sm:text-sm font-medium text-white">{userProgress.username}</p>
+            <div className="mt-1 flex items-center justify-center text-custom-gold">
+              <span className="text-xs">🔥 {userProgress.streak} day streak</span>
             </div>
           </div>
         )}
@@ -78,7 +77,7 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
 
       {/* Search Bar */}
       {isSidebarOpen && (
-        <div className="px-4 py-2">
+        <div className="px-3 py-2">
           <Input
             type="text"
             placeholder="Search topics..."
@@ -91,7 +90,7 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
 
       {/* Daily Challenge */}
       {isSidebarOpen && (
-        <div className="px-4 py-3">
+        <div className="px-3 py-3">
           <Dialog>
             <DialogTrigger asChild>
               <Button className="w-full bg-custom-gold/20 hover:bg-custom-gold/30 text-white border border-custom-gold/30">
@@ -113,7 +112,7 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
                   <li>-1 point for incorrect answers</li>
                   <li>Questions from various topics to test your knowledge</li>
                 </ul>
-                <Button 
+                <Button
                   className="w-full bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
                   onClick={handleStartChallenge}
                 >
@@ -126,8 +125,8 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
       )}
 
       {/* Progress Section */}
-      <div className="px-4 py-3">
-        <div className="flex items-center gap-2 mb-2">
+      <div className={`px-1 ${isSidebarOpen ? "py-3" : "py-1"}`}>
+        <div className="flex items-center gap-2 mb-1">
           {isSidebarOpen ? (
             <>
               <TrendingUp className="h-5 w-5 text-custom-gold" />
@@ -137,8 +136,8 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
             <TrendingUp className="h-5 w-5 text-custom-gold mx-auto" />
           )}
         </div>
-        <div className="w-full bg-custom-darkBlue2 rounded-full h-2.5 mb-2">
-          <div 
+        <div className="w-full bg-custom-darkBlue2 rounded-full h-2.5 mb-1 transition-all">
+          <div
             className="bg-gradient-to-r from-custom-gold to-custom-peach h-2.5 rounded-full transition-all duration-500"
             style={{ width: `${progressPercentage}%` }}
           />
@@ -151,8 +150,8 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
       </div>
 
       {/* Topics Section */}
-      <div className="flex-1 overflow-y-auto px-4 py-3">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="flex-1 overflow-y-auto px-1 py-2">
+        <div className="flex items-center gap-2 mb-1">
           {isSidebarOpen ? (
             <>
               <BookOpen className="h-5 w-5 text-custom-gold" />
@@ -162,10 +161,10 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
             <BookOpen className="h-5 w-5 text-custom-gold mx-auto" />
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           {filteredTopics.map((topic) => (
-            <Link 
-              key={topic.id} 
+            <Link
+              key={topic.id}
               to={`/aptitude/topic/${topic.id}`}
               className={`flex items-center gap-2 p-2 rounded-md hover:bg-custom-darkBlue2 transition-colors ${
                 !topic.isUnlocked ? "opacity-50 pointer-events-none" : ""
