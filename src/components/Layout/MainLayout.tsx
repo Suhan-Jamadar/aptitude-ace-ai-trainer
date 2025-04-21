@@ -1,3 +1,4 @@
+
 import { ReactNode } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
@@ -79,21 +80,7 @@ const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
           <Sidebar topics={mockTopics} userProgress={mockUserProgress} />
         )}
         <main className={`flex-1 ${showSidebar ? "pl-20 lg:pl-64" : ""} pt-20`}>
-          {/* Daily Challenge Section */}
-          <div className="mb-8">
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-custom-darkBlue1">Daily Challenge</h2>
-                <div className="flex items-center">
-                  <span className="text-custom-gold font-semibold mr-2">
-                    🔥 {mockUserProgress.streak} day streak
-                  </span>
-                </div>
-              </div>
-              {/* Daily Challenge content goes here */}
-            </div>
-          </div>
-
+          {/* Removed Daily Challenge Banner and streak */}
           {children}
         </main>
       </div>
@@ -102,3 +89,4 @@ const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
 };
 
 export default MainLayout;
+

@@ -172,19 +172,6 @@ const FlashcardsPage = () => {
           </p>
         </div>
 
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-            <Input
-              type="text"
-              placeholder="Search flashcards..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
         <div 
           className={`
             mb-10 border-2 border-dashed rounded-xl p-8 text-center
