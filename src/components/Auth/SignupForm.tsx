@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,32 +6,28 @@ import { Label } from "@/components/ui/label";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
 
 interface SignupFormProps {
-  onSignup: () => void;
+  onSignupSubmit: (name: string, email: string, password: string) => void;
   onSwitchToLogin: () => void;
+  isLoading: boolean;
 }
 
-const SignupForm = ({ onSignup, onSwitchToLogin }: SignupFormProps) => {
+const SignupForm = ({ onSignupSubmit, onSwitchToLogin, isLoading }: SignupFormProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      alert("Passwords don't match");
+      setPasswordError("Passwords don't match");
       return;
     }
     
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      onSignup();
-    }, 1500);
+    setPasswordError("");
+    onSignupSubmit(name, email, password);
   };
 
   return (
@@ -103,6 +100,9 @@ const SignupForm = ({ onSignup, onSwitchToLogin }: SignupFormProps) => {
               required
             />
           </div>
+          {passwordError && (
+            <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+          )}
         </div>
         
         <Button 

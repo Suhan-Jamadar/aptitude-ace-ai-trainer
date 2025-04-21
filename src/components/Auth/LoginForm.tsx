@@ -6,24 +6,18 @@ import { Label } from "@/components/ui/label";
 import { User, Lock, ArrowRight } from "lucide-react";
 
 interface LoginFormProps {
-  onLogin: () => void;
+  onLoginSubmit: (email: string, password: string) => void;
   onSwitchToSignup: () => void;
+  isLoading: boolean;
 }
 
-const LoginForm = ({ onLogin, onSwitchToSignup }: LoginFormProps) => {
+const LoginForm = ({ onLoginSubmit, onSwitchToSignup, isLoading }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin();
-    }, 1500);
+    onLoginSubmit(email, password);
   };
 
   return (
