@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ const AuthModal = ({
 }: AuthModalProps) => {
   const [view, setView] = useState<"login" | "signup">(defaultView);
   const [isLoading, setIsLoading] = useState(false);
+  const { login, signup } = useAuth();
   
   const handleAuthenticated = () => {
     onAuthenticated();
@@ -28,16 +31,13 @@ const AuthModal = ({
   const handleLoginSubmit = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // This is where you'll connect to your MongoDB backend
-      // Example: await authService.login(email, password);
-      
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Call the login method from AuthContext (which will use authService)
+      await login(email, password);
+      toast.success("Successfully logged in!");
       handleAuthenticated();
     } catch (error) {
       console.error("Login error:", error);
-      // Handle login error
+      toast.error("Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -46,16 +46,13 @@ const AuthModal = ({
   const handleSignupSubmit = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      // This is where you'll connect to your MongoDB backend
-      // Example: await authService.signup(name, email, password);
-      
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Call the signup method from AuthContext (which will use authService)
+      await signup(name, email, password);
+      toast.success("Account created successfully!");
       handleAuthenticated();
     } catch (error) {
       console.error("Signup error:", error);
-      // Handle signup error
+      toast.error("Signup failed. Please try again later.");
     } finally {
       setIsLoading(false);
     }

@@ -1,40 +1,61 @@
 
 import { Question, Topic } from "@/types";
-import { mockQuestions, mockTopics } from "./mockData";
 
-// This service will be used to connect to your MongoDB backend
-// These are just placeholder functions for now
+// API base URL that will come from environment variables
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+// Helper function to handle API requests with authentication
+const apiRequest = async (endpoint: string, options = {}) => {
+  const token = localStorage.getItem('token');
+  
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+    credentials: 'include' as RequestCredentials,
+  };
+  
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...defaultOptions,
+    ...options,
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'API request failed');
+  }
+  
+  return response.json();
+};
+
+/**
+ * Get all available topics
+ */
 export const getTopics = async (): Promise<Topic[]> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    const response = await fetch('/api/topics');
-    if (!response.ok) {
-      throw new Error('Failed to fetch topics');
-    }
-    return await response.json();
+    return await apiRequest('/topics');
   } catch (error) {
     console.error('Get topics error:', error);
-    // Return mock data for now
-    return mockTopics;
+    throw error;
   }
 };
 
+/**
+ * Get questions for a specific topic
+ */
 export const getQuestionsByTopic = async (topicId: string): Promise<Question[]> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    const response = await fetch(`/api/topics/${topicId}/questions`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch questions');
-    }
-    return await response.json();
+    return await apiRequest(`/topics/${topicId}/questions`);
   } catch (error) {
     console.error('Get questions error:', error);
-    // Return mock data for now
-    return mockQuestions[topicId] || [];
+    throw error;
   }
 };
 
+/**
+ * Submit quiz results
+ */
 export const submitQuizResult = async (
   userId: string,
   topicId: string,
@@ -43,13 +64,9 @@ export const submitQuizResult = async (
   questionsAttempted: number,
   correctAnswers: number
 ): Promise<void> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    await fetch('/api/quiz-results', {
+    await apiRequest('/quiz-results', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         userId,
         topicId,
@@ -62,22 +79,22 @@ export const submitQuizResult = async (
     });
   } catch (error) {
     console.error('Submit quiz result error:', error);
+    throw error;
   }
 };
 
+/**
+ * Update topic progress for a user
+ */
 export const updateTopicProgress = async (
   userId: string,
   topicId: string,
   completedQuestions: number,
   score: number
 ): Promise<void> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    await fetch(`/api/users/${userId}/topics/${topicId}/progress`, {
+    await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         completedQuestions,
         score
@@ -85,20 +102,18 @@ export const updateTopicProgress = async (
     });
   } catch (error) {
     console.error('Update topic progress error:', error);
+    throw error;
   }
 };
 
+/**
+ * Get daily challenge questions
+ */
 export const getDailyChallenge = async (): Promise<Question[]> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    const response = await fetch('/api/daily-challenge');
-    if (!response.ok) {
-      throw new Error('Failed to fetch daily challenge');
-    }
-    return await response.json();
+    return await apiRequest('/daily-challenge');
   } catch (error) {
     console.error('Get daily challenge error:', error);
-    // Return sample questions for now
-    return Object.values(mockQuestions).flat().slice(0, 5);
+    throw error;
   }
 };

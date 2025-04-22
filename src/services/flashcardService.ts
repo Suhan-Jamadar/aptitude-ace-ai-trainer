@@ -1,37 +1,57 @@
 
 import { Flashcard } from "@/types";
-import { mockFlashcards } from "./mockData";
 
-// This service will be used to connect to your MongoDB backend
-// These are just placeholder functions for now
+// API base URL that will come from environment variables
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+// Helper function to handle API requests with authentication
+const apiRequest = async (endpoint: string, options = {}) => {
+  const token = localStorage.getItem('token');
+  
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+    credentials: 'include' as RequestCredentials,
+  };
+  
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...defaultOptions,
+    ...options,
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'API request failed');
+  }
+  
+  return response.json();
+};
+
+/**
+ * Get all flashcards for a user
+ */
 export const getFlashcards = async (userId: string): Promise<Flashcard[]> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    const response = await fetch(`/api/users/${userId}/flashcards`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch flashcards');
-    }
-    return await response.json();
+    return await apiRequest(`/users/${userId}/flashcards`);
   } catch (error) {
     console.error('Get flashcards error:', error);
-    // Return mock data for now
-    return mockFlashcards;
+    throw error;
   }
 };
 
+/**
+ * Create a new flashcard
+ */
 export const createFlashcard = async (
   userId: string,
   title: string,
   content: string
 ): Promise<Flashcard> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    const response = await fetch(`/api/users/${userId}/flashcards`, {
+    return await apiRequest(`/users/${userId}/flashcards`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         title,
         content,
@@ -39,94 +59,82 @@ export const createFlashcard = async (
         isRead: false
       }),
     });
-    
-    if (!response.ok) {
-      throw new Error('Failed to create flashcard');
-    }
-    
-    return await response.json();
   } catch (error) {
     console.error('Create flashcard error:', error);
-    // Return mock data for now
-    const newFlashcard: Flashcard = {
-      id: (mockFlashcards.length + 1).toString(),
-      title,
-      content,
-      dateCreated: new Date(),
-      isRead: false
-    };
-    
-    return newFlashcard;
+    throw error;
   }
 };
 
+/**
+ * Update flashcard read status
+ */
 export const updateFlashcardStatus = async (
   userId: string,
   flashcardId: string,
   isRead: boolean
 ): Promise<void> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    await fetch(`/api/users/${userId}/flashcards/${flashcardId}`, {
+    await apiRequest(`/users/${userId}/flashcards/${flashcardId}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         isRead
       }),
     });
   } catch (error) {
     console.error('Update flashcard status error:', error);
+    throw error;
   }
 };
 
+/**
+ * Delete a flashcard
+ */
 export const deleteFlashcard = async (
   userId: string,
   flashcardId: string
 ): Promise<void> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    await fetch(`/api/users/${userId}/flashcards/${flashcardId}`, {
+    await apiRequest(`/users/${userId}/flashcards/${flashcardId}`, {
       method: 'DELETE',
     });
   } catch (error) {
     console.error('Delete flashcard error:', error);
+    throw error;
   }
 };
 
+/**
+ * Upload a document to be converted to flashcards
+ */
 export const uploadDocument = async (
   userId: string,
   file: File,
   title: string
 ): Promise<Flashcard> => {
-  // This will be replaced with actual MongoDB API calls
   try {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
     
-    const response = await fetch(`/api/users/${userId}/documents`, {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/documents`, {
       method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
       body: formData,
+      credentials: 'include',
     });
     
     if (!response.ok) {
-      throw new Error('Failed to upload document');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Upload failed');
     }
     
     return await response.json();
   } catch (error) {
     console.error('Upload document error:', error);
-    // Return mock data for now
-    const newFlashcard: Flashcard = {
-      id: (mockFlashcards.length + 1).toString(),
-      title,
-      content: "This is an AI-generated summary of the uploaded document. It contains key information and important concepts extracted from your notes.",
-      dateCreated: new Date(),
-      isRead: false
-    };
-    
-    return newFlashcard;
+    throw error;
   }
 };

@@ -1,92 +1,110 @@
 
 import { User } from "@/types";
 
-// This service will be used to connect to your MongoDB backend
-// These are just placeholder functions for now
+// API base URL that will come from environment variables when you set up your backend
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+/**
+ * Login a user with email and password
+ */
 export const login = async (email: string, password: string): Promise<User> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    // Simulate API call
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
+      credentials: 'include', // Important for cookies
     });
     
     if (!response.ok) {
-      throw new Error('Login failed');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Login failed');
     }
     
     const userData = await response.json();
-    return userData;
+    
+    // Store the JWT token in localStorage
+    if (userData.token) {
+      localStorage.setItem('token', userData.token);
+    }
+    
+    // Store user info
+    setCurrentUser(userData.user);
+    
+    return userData.user;
   } catch (error) {
     console.error('Login error:', error);
-    // For now, return mock data
-    return {
-      id: "1",
-      name: "John Doe",
-      email: email,
-      streak: 3,
-      joinDate: new Date(2023, 0, 15)
-    };
+    throw error;
   }
 };
 
+/**
+ * Register a new user
+ */
 export const signup = async (
   name: string, 
   email: string, 
   password: string
 ): Promise<User> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    // Simulate API call
-    const response = await fetch('/api/auth/signup', {
+    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name, email, password }),
+      credentials: 'include', // Important for cookies
     });
     
     if (!response.ok) {
-      throw new Error('Signup failed');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Signup failed');
     }
     
     const userData = await response.json();
-    return userData;
+    
+    // Store the JWT token in localStorage
+    if (userData.token) {
+      localStorage.setItem('token', userData.token);
+    }
+    
+    // Store user info
+    setCurrentUser(userData.user);
+    
+    return userData.user;
   } catch (error) {
     console.error('Signup error:', error);
-    // For now, return mock data
-    return {
-      id: (Math.random() * 1000).toString(),
-      name: name,
-      email: email,
-      streak: 0,
-      joinDate: new Date()
-    };
+    throw error;
   }
 };
 
+/**
+ * Logout the current user
+ */
 export const logout = async (): Promise<void> => {
-  // This will be replaced with actual MongoDB API calls
   try {
-    // Simulate API call
-    await fetch('/api/auth/logout', {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      credentials: 'include',
     });
     
-    // Clear local storage or cookies if needed
+    // Clear local storage
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
   } catch (error) {
     console.error('Logout error:', error);
   }
 };
 
+/**
+ * Get the current authenticated user
+ */
 export const getCurrentUser = (): User | null => {
-  // This will be replaced with actual MongoDB API calls
   try {
     const userStr = localStorage.getItem('user');
     if (!userStr) return null;
@@ -98,6 +116,39 @@ export const getCurrentUser = (): User | null => {
   }
 };
 
+/**
+ * Store user in localStorage
+ */
 export const setCurrentUser = (user: User): void => {
   localStorage.setItem('user', JSON.stringify(user));
+};
+
+/**
+ * Get the current user's profile from the API
+ */
+export const getUserProfile = async (): Promise<User> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
+    }
+
+    const userData = await response.json();
+    return userData.user;
+  } catch (error) {
+    console.error('Get user profile error:', error);
+    throw error;
+  }
 };
