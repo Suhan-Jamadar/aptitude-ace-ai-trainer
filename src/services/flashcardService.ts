@@ -14,14 +14,12 @@ const handleResponse = async (response: Response) => {
 export const uploadAndGenerateFlashcard = async (
   userId: string,
   file: File,
-  title: string,
-  apiKey: string
+  title: string
 ): Promise<Flashcard> => {
   try {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
-    formData.append('apiKey', apiKey);
 
     const token = localStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/users/${userId}/flashcards/generate`, {

@@ -7,7 +7,7 @@ import { Flashcard } from "@/types";
 import { Upload, File, FileText, Check, Calendar, Filter, ArrowUpDown, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { isValidFile, generateFlashcardContent } from "@/utils/fileUtils";
+import { isValidFile } from "@/utils/fileUtils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { uploadAndGenerateFlashcard } from "@/services/flashcardService";
 
@@ -45,7 +45,6 @@ const FlashcardsPage = () => {
   const [selectedFlashcard, setSelectedFlashcard] = useState<Flashcard | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [geminiApiKey, setGeminiApiKey] = useState("");
 
   const handleCheckFlashcard = (id: string) => {
     setFlashcards(flashcards.map(card => 
@@ -91,11 +90,6 @@ const FlashcardsPage = () => {
       toast.error("Please provide a name for your flashcard");
       return;
     }
-
-    if (!geminiApiKey) {
-      toast.error("Please provide your Gemini API key");
-      return;
-    }
     
     setIsUploading(true);
 
@@ -103,8 +97,7 @@ const FlashcardsPage = () => {
       const newFlashcard = await uploadAndGenerateFlashcard(
         "user123", // Replace with actual user ID from auth context
         file,
-        newFlashcardTitle,
-        geminiApiKey
+        newFlashcardTitle
       );
       
       setFlashcards([...flashcards, newFlashcard]);
@@ -216,12 +209,6 @@ const FlashcardsPage = () => {
                   placeholder="Name your flashcard (e.g., Keys in DBMS)"
                   value={newFlashcardTitle}
                   onChange={(e) => setNewFlashcardTitle(e.target.value)}
-                />
-                <Input
-                  type="password"
-                  placeholder="Enter your Gemini API key"
-                  value={geminiApiKey}
-                  onChange={(e) => setGeminiApiKey(e.target.value)}
                 />
                 <input 
                   type="file"
