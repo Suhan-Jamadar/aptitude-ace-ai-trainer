@@ -1,8 +1,61 @@
-
 import { Flashcard } from "@/types";
 
 // API base URL that will come from environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'API request failed');
+  }
+  return response.json();
+};
+
+export const uploadAndGenerateFlashcard = async (
+  userId: string,
+  file: File,
+  title: string,
+  apiKey: string
+): Promise<Flashcard> => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title);
+    formData.append('apiKey', apiKey);
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/flashcards/generate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+      credentials: 'include',
+    });
+
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Generate flashcard error:', error);
+    throw error;
+  }
+};
+
+export const getFlashcards = async (userId: string): Promise<Flashcard[]> => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/flashcards`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      credentials: 'include',
+    });
+
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Get flashcards error:', error);
+    throw error;
+  }
+};
 
 // Helper function to handle API requests with authentication
 const apiRequest = async (endpoint: string, options = {}) => {
@@ -27,18 +80,6 @@ const apiRequest = async (endpoint: string, options = {}) => {
   }
   
   return response.json();
-};
-
-/**
- * Get all flashcards for a user
- */
-export const getFlashcards = async (userId: string): Promise<Flashcard[]> => {
-  try {
-    return await apiRequest(`/users/${userId}/flashcards`);
-  } catch (error) {
-    console.error('Get flashcards error:', error);
-    throw error;
-  }
 };
 
 /**

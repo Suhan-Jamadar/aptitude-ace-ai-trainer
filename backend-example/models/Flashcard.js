@@ -15,6 +15,14 @@ const FlashcardSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  originalText: {
+    type: String,
+    required: true
+  },
+  aiGenerated: {
+    type: Boolean,
+    default: true
+  },
   dateCreated: {
     type: Date,
     default: Date.now

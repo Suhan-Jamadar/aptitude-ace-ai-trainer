@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { isValidFile, generateFlashcardContent } from "@/utils/fileUtils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { uploadAndGenerateFlashcard } from "@/services/flashcardService";
 
 const mockFlashcards: Flashcard[] = [
   {
@@ -44,6 +45,7 @@ const FlashcardsPage = () => {
   const [selectedFlashcard, setSelectedFlashcard] = useState<Flashcard | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [geminiApiKey, setGeminiApiKey] = useState("");
 
   const handleCheckFlashcard = (id: string) => {
     setFlashcards(flashcards.map(card => 
@@ -77,7 +79,7 @@ const FlashcardsPage = () => {
     }
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     const validation = isValidFile(file);
     
     if (!validation.valid) {
@@ -89,19 +91,21 @@ const FlashcardsPage = () => {
       toast.error("Please provide a name for your flashcard");
       return;
     }
+
+    if (!geminiApiKey) {
+      toast.error("Please provide your Gemini API key");
+      return;
+    }
     
     setIsUploading(true);
 
-    setTimeout(() => {
-      setIsUploading(false);
-      
-      const newFlashcard: Flashcard = {
-        id: (flashcards.length + 1).toString(),
-        title: newFlashcardTitle,
-        content: generateFlashcardContent(file.name),
-        dateCreated: new Date(),
-        isRead: false
-      };
+    try {
+      const newFlashcard = await uploadAndGenerateFlashcard(
+        "user123", // Replace with actual user ID from auth context
+        file,
+        newFlashcardTitle,
+        geminiApiKey
+      );
       
       setFlashcards([...flashcards, newFlashcard]);
       setNewFlashcardTitle("");
@@ -110,7 +114,11 @@ const FlashcardsPage = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    }, 2000);
+    } catch (error) {
+      toast.error("Failed to generate flashcard. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleBrowseFiles = () => {
@@ -202,13 +210,18 @@ const FlashcardsPage = () => {
               <p className="text-gray-500 mb-6">
                 Drag and drop your PDF, DOC, or TXT files here
               </p>
-              <div className="max-w-sm mx-auto">
+              <div className="max-w-sm mx-auto space-y-4">
                 <Input
                   type="text"
                   placeholder="Name your flashcard (e.g., Keys in DBMS)"
                   value={newFlashcardTitle}
                   onChange={(e) => setNewFlashcardTitle(e.target.value)}
-                  className="mb-4"
+                />
+                <Input
+                  type="password"
+                  placeholder="Enter your Gemini API key"
+                  value={geminiApiKey}
+                  onChange={(e) => setGeminiApiKey(e.target.value)}
                 />
                 <input 
                   type="file"
