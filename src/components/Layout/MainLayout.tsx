@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import Footer from "./Footer";
 import { Topic } from "@/types";
 
 interface MainLayoutProps {
@@ -80,13 +81,12 @@ const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
           <Sidebar topics={mockTopics} userProgress={mockUserProgress} />
         )}
         <main className={`flex-1 ${showSidebar ? "pl-20 lg:pl-64" : ""} pt-20`}>
-          {/* Removed Daily Challenge Banner and streak */}
           {children}
         </main>
       </div>
+      <Footer />
     </div>
   );
 };
 
 export default MainLayout;
-

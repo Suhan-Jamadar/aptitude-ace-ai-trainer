@@ -22,11 +22,11 @@ const HomePage = () => {
 
   return (
     <MainLayout>
-      <div className="min-h-[calc(100vh-5rem)] flex items-center px-2 sm:px-4">
+      <div className="min-h-[calc(100vh-5rem)] flex items-center px-2 sm:px-4 mb-16">
         <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Left side - Content */}
-          <div className="order-2 lg:order-1">
-            <div className="bg-white/80 backdrop-blur-md p-3 sm:p-6 md:p-8 rounded-2xl shadow-xl animate-fade-in"
+          <div className="order-2 lg:order-1 min-h-[400px] flex flex-col justify-center">
+            <div className="bg-white/80 backdrop-blur-md p-3 sm:p-6 md:p-8 rounded-2xl shadow-xl animate-fade-in h-full"
               style={{ animationDelay: "0.1s" }}>
               {/* Title */}
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-3 md:mb-6 text-custom-darkBlue1 animate-fade-in"
@@ -61,9 +61,6 @@ const HomePage = () => {
                 />
               </div>
 
-              {/* Features List */}
-              <HomeFeatures />
-
               {/* Call to Action */}
               <HomeActions
                 onSignUp={() => handleOpenAuthModal("signup")}
@@ -73,11 +70,14 @@ const HomePage = () => {
           </div>
 
           {/* Right side - 3D Animation */}
-          <div className="order-1 lg:order-2">
+          <div className="order-1 lg:order-2 min-h-[400px]">
             <AptitudeFeature3D />
           </div>
         </div>
       </div>
+
+      {/* Features Section */}
+      <HomeFeatures />
 
       {/* Auth Modal */}
       <AuthModal
