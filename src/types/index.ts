@@ -1,5 +1,3 @@
-
-
 // User types
 export interface User {
   id: string;
@@ -17,6 +15,12 @@ export interface AuthState {
 }
 
 // Topic types
+export interface SubTopic {
+  id: string;
+  name: string;
+  link: string;
+}
+
 export interface Topic {
   id: string;
   name: string;
@@ -28,7 +32,8 @@ export interface Topic {
   isUnlocked: boolean;
   recommendation?: string;
   attempts?: number;
-  avgTime?: number; // in seconds
+  avgTime?: number;
+  subtopics?: SubTopic[];
 }
 
 // Quiz types
@@ -66,4 +71,3 @@ export interface Progress {
   averageScore: number;
   grandTestUnlocked: boolean;
 }
-

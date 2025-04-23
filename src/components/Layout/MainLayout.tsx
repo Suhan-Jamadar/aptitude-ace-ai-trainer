@@ -1,4 +1,3 @@
-
 import { ReactNode, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
@@ -6,12 +5,7 @@ import Footer from "./Footer";
 import { Topic } from "@/types";
 import { cn } from "@/lib/utils";
 
-interface MainLayoutProps {
-  children: ReactNode;
-  showSidebar?: boolean;
-}
-
-// Mock topics data
+// Mock topics data with subtopics
 const mockTopics: Topic[] = [
   {
     id: "1",
@@ -21,7 +15,24 @@ const mockTopics: Topic[] = [
     totalQuestions: 20,
     completedQuestions: 15,
     score: 80,
-    isUnlocked: true
+    isUnlocked: true,
+    subtopics: [
+      {
+        id: "1-1",
+        name: "Prime Series",
+        link: "https://www.geeksforgeeks.org/prime-numbers/"
+      },
+      {
+        id: "1-2",
+        name: "Square and Cube Series",
+        link: "https://www.geeksforgeeks.org/square-and-cube-series/"
+      },
+      {
+        id: "1-3",
+        name: "Fibonacci Series",
+        link: "https://www.geeksforgeeks.org/fibonacci-series/"
+      }
+    ]
   },
   {
     id: "2",
@@ -31,7 +42,19 @@ const mockTopics: Topic[] = [
     totalQuestions: 20,
     completedQuestions: 10,
     score: 75,
-    isUnlocked: true
+    isUnlocked: true,
+    subtopics: [
+      {
+        id: "2-1",
+        name: "Time and Work Basics",
+        link: "https://www.geeksforgeeks.org/time-and-work-formula/"
+      },
+      {
+        id: "2-2",
+        name: "Efficiency Problems",
+        link: "https://www.geeksforgeeks.org/efficiency-problems/"
+      }
+    ]
   },
   {
     id: "3",
