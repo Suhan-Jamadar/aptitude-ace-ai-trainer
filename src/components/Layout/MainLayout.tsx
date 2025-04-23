@@ -1,9 +1,16 @@
+
 import { ReactNode, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import { Topic } from "@/types";
 import { cn } from "@/lib/utils";
+
+// Define MainLayoutProps interface
+interface MainLayoutProps {
+  children: ReactNode;
+  showSidebar?: boolean;
+}
 
 // Mock topics data with subtopics
 const mockTopics: Topic[] = [
