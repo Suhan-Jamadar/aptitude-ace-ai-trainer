@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Question } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
@@ -21,6 +21,15 @@ const QuizQuestion = ({
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const isCorrect = selectedOption === question.correctAnswer;
+  
+  useEffect(() => {
+    const startTime = Date.now();
+    const timer = setInterval(() => {
+      setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [question.id]); // Reset timer when question changes
 
   const handleOptionSelect = (option: string) => {
     if (!hasSubmitted) {
@@ -38,6 +47,7 @@ const QuizQuestion = ({
   const handleNext = () => {
     setSelectedOption(null);
     setHasSubmitted(false);
+    setTimeSpent(0);
   };
 
   return (

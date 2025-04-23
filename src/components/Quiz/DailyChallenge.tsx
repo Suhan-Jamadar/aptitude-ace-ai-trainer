@@ -1,11 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Question } from "@/types";
 import QuizQuestion from "./QuizQuestion";
 import { Clock, X, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { updateUserStreak } from "@/services/progressService";
 
 // Mock daily challenge questions
 const dailyChallengeQuestions: Question[] = [
@@ -62,20 +64,32 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
   const [timeRemaining, setTimeRemaining] = useState(5 * 60); // 5 minutes in seconds
   const [streakIncreased, setStreakIncreased] = useState(false);
   const [startTime] = useState(Date.now());
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           setIsCompleted(true);
+          completeChallenge();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, []);
 
   const formatTime = (seconds: number) => {
@@ -100,12 +114,43 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
       const randomIndex = Math.floor(Math.random() * dailyChallengeQuestions.length);
       setCurrentQuestionIndex(randomIndex);
     } else {
-      setIsCompleted(true);
-      if (score >= 6) { // Adjusted threshold for streak
-        setStreakIncreased(true);
-        toast.success("Daily streak increased!");
+      completeChallenge();
+    }
+  };
+
+  // Complete challenge and record results
+  const completeChallenge = async () => {
+    if (isCompleted) return; // Prevent multiple submissions
+    
+    setIsCompleted(true);
+    
+    // Stop the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Check if score is enough to increase streak
+    if (score >= 6) {
+      setStreakIncreased(true);
+      
+      // If user is authenticated, update streak in backend
+      if (user) {
+        setIsSubmitting(true);
+        try {
+          const currentStreak = user.streak || 0;
+          await updateUserStreak(user.id, currentStreak + 1);
+          toast.success("Daily streak increased!");
+        } catch (error) {
+          console.error("Error updating streak:", error);
+          toast.error("Failed to update streak");
+        }
+        setIsSubmitting(false);
       }
     }
+    
+    // Record completion in local storage to prevent multiple daily challenges
+    localStorage.setItem('lastDailyChallenge', new Date().toISOString().slice(0, 10));
   };
 
   // Calculate time spent when challenge is completed
@@ -159,6 +204,10 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
               <div className="bg-custom-gold/20 p-3 rounded-lg mb-4 animate-pulse">
                 <p className="text-custom-gold font-medium">🔥 Daily streak increased!</p>
               </div>
+            )}
+            
+            {isSubmitting && (
+              <p className="text-blue-500 mb-2">Updating streak...</p>
             )}
             
             <div className="mt-6">

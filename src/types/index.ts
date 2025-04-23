@@ -1,3 +1,4 @@
+
 // User types
 export interface User {
   id: string;
@@ -48,6 +49,7 @@ export interface Question {
 
 export interface QuizResult {
   topicId: string;
+  userId: string;
   score: number;
   timeSpent: number;
   date: Date;

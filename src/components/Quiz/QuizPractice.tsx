@@ -1,10 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Question } from "@/types";
+import { Question, QuizResult } from "@/types";
 import QuizQuestion from "./QuizQuestion";
 import { X } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { submitQuizResult, updateTopicProgress } from "@/services/questionService";
 
 // Mock questions data
 const questionsData: Record<string, Question[]> = {
@@ -97,19 +100,37 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const [timeSpent, setTimeSpent] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const [attempts, setAttempts] = useState(0);
+  const [avgTime, setAvgTime] = useState(0);
 
   useEffect(() => {
     // Fetch questions for the topic
     const topicQuestions = questionsData[topicId] || [];
     setQuestions(topicQuestions);
     setStartTime(Date.now());
+    
+    // Get previous attempts data if available
+    const attemptData = localStorage.getItem(`${topicId}_attempts`);
+    if (attemptData) {
+      const data = JSON.parse(attemptData);
+      setAttempts(data.attempts || 0);
+      setAvgTime(data.avgTime || 0);
+    }
 
     // Update time spent
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [topicId, startTime]);
 
   const handleAnswerSubmit = (isCorrect: boolean) => {
@@ -122,8 +143,61 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      // Stop the timer when quiz is completed
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
       setIsCompleted(true);
+      recordQuizResults();
     }
+  };
+  
+  const recordQuizResults = async () => {
+    setIsSubmitting(true);
+    
+    // Calculate final score
+    const finalScore = Math.round((score / questions.length) * 100);
+    const finalTimeSpent = Math.floor((Date.now() - startTime) / 1000);
+    
+    // Calculate new average time and update attempts
+    const newAttempts = attempts + 1;
+    const newAvgTime = Math.round(((avgTime * attempts) + finalTimeSpent) / newAttempts);
+    
+    // Save to local storage
+    localStorage.setItem(`${topicId}_attempts`, JSON.stringify({
+      attempts: newAttempts,
+      avgTime: newAvgTime
+    }));
+    
+    // If user is authenticated, save to backend
+    if (user) {
+      try {
+        await submitQuizResult(
+          user.id,
+          topicId,
+          finalScore,
+          finalTimeSpent,
+          questions.length,
+          score
+        );
+        
+        await updateTopicProgress(
+          user.id,
+          topicId,
+          Math.min(questions.length, questions.length),
+          finalScore
+        );
+        
+        toast.success("Quiz results saved successfully!");
+      } catch (error) {
+        console.error("Error saving quiz results:", error);
+        toast.error("Failed to save quiz results");
+      }
+    }
+    
+    setIsSubmitting(false);
   };
 
   // Format time as mm:ss
@@ -169,6 +243,7 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
                 <h3 className="text-xl font-semibold mb-2">Practice Complete!</h3>
                 <p className="mb-2">You scored {score} out of {questions.length}</p>
                 <p className="text-gray-500 mb-4">Time taken: {formatTime(timeSpent)}</p>
+                {isSubmitting && <p className="text-blue-500 mb-4">Saving results...</p>}
                 <Button onClick={onClose}>Close</Button>
               </div>
             )}

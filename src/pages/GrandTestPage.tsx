@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Question } from "@/types";
@@ -8,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import Timer from "@/components/Quiz/GrandTest/Timer";
 import QuestionView from "@/components/Quiz/GrandTest/QuestionView";
 import ResultView from "@/components/Quiz/GrandTest/ResultView";
+import { useAuth } from "@/contexts/AuthContext";
+import { submitGrandTestResult } from "@/services/progressService";
 
 // Mock grand test questions - mix of different topics
 const grandTestQuestions: Question[] = [
@@ -43,17 +46,23 @@ const grandTestQuestions: Question[] = [
 
 const GrandTestPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isTestCompleted, setIsTestCompleted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(45 * 60); // 45 minutes in seconds
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [startTime] = useState(Date.now());
   
   useEffect(() => {
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          clearInterval(timer);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           handleTestCompletion();
           return 0;
         }
@@ -61,7 +70,12 @@ const GrandTestPage = () => {
       });
     }, 1000);
     
-    return () => clearInterval(timer);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, []);
   
   const handleAnswerSubmit = (isCorrect: boolean) => {
@@ -85,12 +99,20 @@ const GrandTestPage = () => {
     }
   };
   
-  const handleTestCompletion = () => {
+  const handleTestCompletion = async () => {
+    if (isTestCompleted) return; // Prevent multiple submissions
+    
+    // Stop the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
     setIsTestCompleted(true);
-    clearInterval(timeRemaining as unknown as number);
     
     const finalScore = (score / (grandTestQuestions.length * 2)) * 100;
     const isPassed = finalScore >= 70;
+    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
     
     toast({
       title: isPassed ? "Congratulations!" : "Test Completed",
@@ -99,6 +121,21 @@ const GrandTestPage = () => {
         : `You scored ${finalScore.toFixed(1)}%. Try again to improve your score.`,
       variant: isPassed ? "default" : "destructive"
     });
+    
+    // Submit test results to backend if user is authenticated
+    if (user) {
+      try {
+        await submitGrandTestResult(
+          user.id,
+          Math.round(finalScore),
+          timeSpent,
+          grandTestQuestions.length,
+          Math.round(score / 2) // Convert score to number of correct answers
+        );
+      } catch (error) {
+        console.error("Error submitting test results:", error);
+      }
+    }
   };
   
   const handleFinishTest = () => {
