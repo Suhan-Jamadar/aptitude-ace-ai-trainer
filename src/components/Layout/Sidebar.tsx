@@ -7,12 +7,15 @@ import {
   BarChart2,
   Calendar,
   TrendingUp,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Topic } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   topics: Topic[];
@@ -22,10 +25,11 @@ interface SidebarProps {
     totalTopics: number;
     username?: string;
   };
+  isSidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
 }
 
-const Sidebar = ({ topics, userProgress }: SidebarProps) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+const Sidebar = ({ topics, userProgress, isSidebarCollapsed, onToggleSidebar }: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
@@ -41,31 +45,29 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
 
   return (
     <div
-      className={`h-screen bg-sidebar flex flex-col transition-all duration-300 ${
-        isSidebarOpen ? "w-64" : "w-8"
-      } bg-custom-darkBlue1 text-white fixed left-0 top-0 pt-20 z-20 shadow-xl`}
-      style={{ minWidth: isSidebarOpen ? "16rem" : "2rem" }}
+      className={cn(
+        "h-screen bg-sidebar flex flex-col transition-all duration-300 fixed left-0 top-0 pt-20 z-20 shadow-xl bg-custom-darkBlue1 text-white",
+        isSidebarCollapsed ? "w-20" : "w-64"
+      )}
     >
       {/* Collapse/Expand Button */}
       <Button
         variant="ghost"
         size="icon"
-        className={`absolute top-4 right-2 text-white z-30 hover:text-custom-gold px-0 focus:outline-none group`}
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        className="absolute top-4 right-2 text-white hover:text-custom-gold focus:outline-none"
+        onClick={onToggleSidebar}
       >
-        <span className="block md:hidden">{isSidebarOpen ? <span className="text-xl">←</span> : <span className="text-xl">→</span>}</span>
-        <span className="hidden md:block">{isSidebarOpen ? <span className="text-xl">←</span> : <span className="text-xl">→</span>}</span>
+        {isSidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
       </Button>
 
       {/* Profile Section */}
-      <div className="px-1 py-6 flex flex-col items-center">
+      <div className={cn("px-1 py-6 flex flex-col items-center", isSidebarCollapsed && "px-0")}>
         <div className="relative">
-          <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-custom-gold/20 flex items-center justify-center">
-            <User className="h-5 w-5 sm:h-8 sm:w-8 text-custom-gold" />
+          <div className="w-10 h-10 rounded-full bg-custom-gold/20 flex items-center justify-center">
+            <User className="h-5 w-5 text-custom-gold" />
           </div>
         </div>
-        {isSidebarOpen && userProgress.username && (
+        {!isSidebarCollapsed && userProgress.username && (
           <div className="mt-2 text-center">
             <p className="text-xs sm:text-sm font-medium text-white">{userProgress.username}</p>
             <div className="mt-1 flex items-center justify-center text-custom-gold">
@@ -76,7 +78,7 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
       </div>
 
       {/* Search Bar */}
-      {isSidebarOpen && (
+      {!isSidebarCollapsed && (
         <div className="px-3 py-2">
           <Input
             type="text"
@@ -88,92 +90,35 @@ const Sidebar = ({ topics, userProgress }: SidebarProps) => {
         </div>
       )}
 
-      {/* Daily Challenge */}
-      {isSidebarOpen && (
-        <div className="px-3 py-3">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="w-full bg-custom-gold/20 hover:bg-custom-gold/30 text-white border border-custom-gold/30">
-                <Calendar className="h-5 w-5 text-custom-gold mr-2" />
-                Daily Challenge
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Daily Challenge Instructions</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <p className="text-sm text-gray-600">
-                  🎯 Challenge yourself with our daily quiz:
-                </p>
-                <ul className="list-disc pl-4 space-y-2 text-sm text-gray-600">
-                  <li>5 minutes to answer as many questions as possible</li>
-                  <li>+2 points for correct answers</li>
-                  <li>-1 point for incorrect answers</li>
-                  <li>Questions from various topics to test your knowledge</li>
-                </ul>
-                <Button
-                  className="w-full bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
-                  onClick={handleStartChallenge}
-                >
-                  Start Challenge
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      )}
-
       {/* Progress Section */}
-      <div className={`px-1 ${isSidebarOpen ? "py-3" : "py-1"}`}>
+      <div className={cn("px-3 py-3", isSidebarCollapsed && "px-2")}>
         <div className="flex items-center gap-2 mb-1">
-          {isSidebarOpen ? (
-            <>
-              <TrendingUp className="h-5 w-5 text-custom-gold" />
-              <h3 className="font-medium">Progress</h3>
-            </>
-          ) : (
-            <TrendingUp className="h-5 w-5 text-custom-gold mx-auto" />
-          )}
+          <TrendingUp className="h-5 w-5 text-custom-gold" />
+          {!isSidebarCollapsed && <h3 className="font-medium">Progress</h3>}
         </div>
-        <div className="w-full bg-custom-darkBlue2 rounded-full h-2.5 mb-1 transition-all">
-          <div
-            className="bg-gradient-to-r from-custom-gold to-custom-peach h-2.5 rounded-full transition-all duration-500"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-        {isSidebarOpen && (
-          <p className="text-xs text-center">
-            {userProgress.topicsCompleted} of {userProgress.totalTopics} Topics Completed
-          </p>
-        )}
+        <Progress value={progressPercentage} className="h-2" />
       </div>
 
       {/* Topics Section */}
-      <div className="flex-1 overflow-y-auto px-1 py-2">
+      <div className="flex-1 overflow-y-auto px-3 py-2">
         <div className="flex items-center gap-2 mb-1">
-          {isSidebarOpen ? (
-            <>
-              <BookOpen className="h-5 w-5 text-custom-gold" />
-              <h3 className="font-medium">Topics</h3>
-            </>
-          ) : (
-            <BookOpen className="h-5 w-5 text-custom-gold mx-auto" />
-          )}
+          <BookOpen className="h-5 w-5 text-custom-gold" />
+          {!isSidebarCollapsed && <h3 className="font-medium">Topics</h3>}
         </div>
         <div className="space-y-1">
           {filteredTopics.map((topic) => (
             <Link
               key={topic.id}
               to={`/aptitude/topic/${topic.id}`}
-              className={`flex items-center gap-2 p-2 rounded-md hover:bg-custom-darkBlue2 transition-colors ${
-                !topic.isUnlocked ? "opacity-50 pointer-events-none" : ""
-              }`}
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md hover:bg-custom-darkBlue2 transition-colors",
+                !topic.isUnlocked && "opacity-50 pointer-events-none"
+              )}
             >
               <div className="bg-custom-gold/20 p-1.5 rounded-md">
                 <BarChart2 className="h-4 w-4 text-custom-gold" />
               </div>
-              {isSidebarOpen && (
+              {!isSidebarCollapsed && (
                 <span className="text-sm truncate">{topic.name}</span>
               )}
             </Link>

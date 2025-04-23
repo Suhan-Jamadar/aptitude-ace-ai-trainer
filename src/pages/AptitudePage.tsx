@@ -20,7 +20,7 @@ const AptitudePage = () => {
   return (
     <MainLayout showSidebar={true}>
       <motion.div 
-        className="container mx-auto px-4 py-8"
+        className="container mx-auto px-4 py-8 transition-all duration-300"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}

@@ -1,9 +1,10 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import { Topic } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -73,14 +74,26 @@ const mockUserProgress = {
 };
 
 const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col bg-custom-lightGray">
       <Header />
       <div className="flex flex-1">
         {showSidebar && (
-          <Sidebar topics={mockTopics} userProgress={mockUserProgress} />
+          <Sidebar 
+            topics={mockTopics} 
+            userProgress={mockUserProgress} 
+            isSidebarCollapsed={isSidebarCollapsed}
+            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          />
         )}
-        <main className={`flex-1 ${showSidebar ? "pl-20 lg:pl-64" : ""} pt-20`}>
+        <main 
+          className={cn(
+            "flex-1 pt-20 transition-all duration-300 ease-in-out",
+            showSidebar && (isSidebarCollapsed ? "pl-20" : "pl-64")
+          )}
+        >
           {children}
         </main>
       </div>
