@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Question } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { shuffleArray } from "@/utils/arrayUtils";
 
 interface QuizQuestionProps {
   question: Question;
@@ -20,16 +21,24 @@ const QuizQuestion = ({
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
-  const isCorrect = selectedOption === question.correctAnswer;
+  const [randomizedOptions, setRandomizedOptions] = useState<string[]>([]);
   
   useEffect(() => {
+    // Reset state when question changes
+    setSelectedOption(null);
+    setHasSubmitted(false);
+    setTimeSpent(0);
+    
+    // Randomize options when question changes
+    setRandomizedOptions(shuffleArray(question.options));
+    
     const startTime = Date.now();
     const timer = setInterval(() => {
       setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [question.id]); // Reset timer when question changes
+  }, [question.id]); // Reset timer and randomize options when question changes
 
   const handleOptionSelect = (option: string) => {
     if (!hasSubmitted) {
@@ -40,6 +49,7 @@ const QuizQuestion = ({
   const handleSubmit = () => {
     if (selectedOption) {
       setHasSubmitted(true);
+      const isCorrect = selectedOption === question.correctAnswer;
       onAnswerSubmit(isCorrect);
     }
   };
@@ -67,7 +77,7 @@ const QuizQuestion = ({
       </h3>
 
       <div className="space-y-3 mb-8">
-        {question.options.map((option, index) => (
+        {randomizedOptions.map((option, index) => (
           <button
             key={index}
             className={`
@@ -106,9 +116,9 @@ const QuizQuestion = ({
 
       {hasSubmitted ? (
         <div>
-          <div className={`p-4 rounded-lg mb-6 ${isCorrect ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+          <div className={`p-4 rounded-lg mb-6 ${selectedOption === question.correctAnswer ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
             <div className="font-semibold mb-2 flex items-center">
-              {isCorrect ? (
+              {selectedOption === question.correctAnswer ? (
                 <>
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                   <span className="text-green-700">Correct Answer!</span>
@@ -120,7 +130,7 @@ const QuizQuestion = ({
                 </>
               )}
             </div>
-            <p className={isCorrect ? "text-green-700" : "text-red-700"}>
+            <p className={selectedOption === question.correctAnswer ? "text-green-700" : "text-red-700"}>
               {question.explanation}
             </p>
           </div>

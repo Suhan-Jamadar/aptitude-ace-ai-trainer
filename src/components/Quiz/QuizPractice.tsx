@@ -105,6 +105,7 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
   const { user } = useAuth();
   const [attempts, setAttempts] = useState(0);
   const [avgTime, setAvgTime] = useState(0);
+  const [waitingForNextQuestion, setWaitingForNextQuestion] = useState(false);
 
   useEffect(() => {
     // Fetch questions for the topic
@@ -137,9 +138,12 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
     if (isCorrect) {
       setScore(score + 1);
     }
+    setWaitingForNextQuestion(true);
   };
 
   const handleNextQuestion = () => {
+    setWaitingForNextQuestion(false);
+    
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
@@ -230,13 +234,21 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
 
                 <QuizQuestion
                   question={questions[currentQuestionIndex]}
-                  onAnswerSubmit={(isCorrect) => {
-                    handleAnswerSubmit(isCorrect);
-                    setTimeout(handleNextQuestion, 1500);
-                  }}
+                  onAnswerSubmit={handleAnswerSubmit}
                   questionNumber={currentQuestionIndex + 1}
                   totalQuestions={questions.length}
                 />
+
+                {waitingForNextQuestion && (
+                  <div className="mt-4 flex justify-center">
+                    <Button 
+                      onClick={handleNextQuestion}
+                      className="bg-custom-darkBlue1 hover:bg-custom-darkBlue2 text-white"
+                    >
+                      {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Finish Quiz"}
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-6">

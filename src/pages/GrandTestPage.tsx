@@ -94,9 +94,7 @@ const GrandTestPage = () => {
       });
     }
     
-    if (currentQuestionIndex < grandTestQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
+    // Only move to next question when explicitly requested, not after submit
   };
   
   const handleTestCompletion = async () => {
@@ -152,6 +150,12 @@ const GrandTestPage = () => {
     setIsTestCompleted(false);
     setTimeRemaining(45 * 60);
   };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < grandTestQuestions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
   
   return (
     <MainLayout showSidebar={true}>
@@ -174,7 +178,10 @@ const GrandTestPage = () => {
             totalQuestions={grandTestQuestions.length}
             question={grandTestQuestions[currentQuestionIndex]}
             timeRemaining={timeRemaining}
-            onAnswerSubmit={handleAnswerSubmit}
+            onAnswerSubmit={(isCorrect) => {
+              handleAnswerSubmit(isCorrect);
+              // Don't move to next question automatically
+            }}
             onFinishTest={handleFinishTest}
             isSubmitting={isSubmitting}
           />
@@ -184,6 +191,18 @@ const GrandTestPage = () => {
             totalQuestions={grandTestQuestions.length}
             onRetry={handleRetry}
           />
+        )}
+        
+        {!isTestCompleted && (
+          <div className="mt-4 flex justify-center">
+            <Button 
+              className="bg-custom-darkBlue1 hover:bg-custom-darkBlue2 text-white"
+              onClick={handleNextQuestion}
+              disabled={currentQuestionIndex === grandTestQuestions.length - 1}
+            >
+              Next Question
+            </Button>
+          </div>
         )}
         
         {timeRemaining < 300 && !isTestCompleted && (

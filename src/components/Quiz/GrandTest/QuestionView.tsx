@@ -41,7 +41,7 @@ const QuestionView = ({
       </div>
       
       <QuizQuestion
-        question={question}
+        question={{...question}} // Create a new object to ensure proper re-rendering
         onAnswerSubmit={onAnswerSubmit}
         questionNumber={currentQuestionIndex + 1}
         totalQuestions={totalQuestions}
