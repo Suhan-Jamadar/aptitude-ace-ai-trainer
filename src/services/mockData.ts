@@ -1,4 +1,3 @@
-
 import { Topic, Question, Flashcard, User, Progress } from "@/types";
 
 // Mock user data
@@ -10,7 +9,7 @@ export const mockUser: User = {
   joinDate: new Date(2023, 0, 15)
 };
 
-// Mock topics data
+// Updated mock topics data with new topics and 4 subtopics each
 export const mockTopics: Topic[] = [
   {
     id: "1",
@@ -21,18 +20,60 @@ export const mockTopics: Topic[] = [
     completedQuestions: 15,
     score: 80,
     isUnlocked: true,
-    recommendation: "Check out GeeksforGeeks for number series patterns: https://www.geeksforgeeks.org/number-series-formulas/"
+    subtopics: [
+      {
+        id: "1-1",
+        name: "Prime Series",
+        link: "https://www.geeksforgeeks.org/prime-numbers/"
+      },
+      {
+        id: "1-2",
+        name: "Square and Cube Series",
+        link: "https://www.geeksforgeeks.org/square-and-cube-series/"
+      },
+      {
+        id: "1-3",
+        name: "Fibonacci Series",
+        link: "https://www.geeksforgeeks.org/fibonacci-series/"
+      },
+      {
+        id: "1-4",
+        name: "Arithmetic Series",
+        link: "https://www.geeksforgeeks.org/arithmetic-progression/"
+      }
+    ]
   },
   {
     id: "2",
     name: "Time & Work",
     description: "Calculate work efficiency and time required for tasks",
-    icon: "calendar",
+    icon: "book-open",
     totalQuestions: 20,
     completedQuestions: 10,
     score: 75,
     isUnlocked: true,
-    recommendation: "Practice more on time and work problems at Medium: https://medium.com/tag/aptitude"
+    subtopics: [
+      {
+        id: "2-1",
+        name: "Basic Concepts",
+        link: "https://www.geeksforgeeks.org/time-and-work-formula/"
+      },
+      {
+        id: "2-2",
+        name: "Work Efficiency",
+        link: "https://www.geeksforgeeks.org/efficiency-problems/"
+      },
+      {
+        id: "2-3",
+        name: "Time Reduction Problems",
+        link: "https://www.geeksforgeeks.org/time-reduction-problems/"
+      },
+      {
+        id: "2-4",
+        name: "Pipes and Cisterns",
+        link: "https://www.geeksforgeeks.org/pipes-and-cisterns/"
+      }
+    ]
   },
   {
     id: "3",
@@ -43,27 +84,92 @@ export const mockTopics: Topic[] = [
     completedQuestions: 5,
     score: 60,
     isUnlocked: true,
-    recommendation: "Review percentage shortcuts at GeeksforGeeks: https://www.geeksforgeeks.org/percentages-formulas/"
+    subtopics: [
+      {
+        id: "3-1",
+        name: "Basic Percentage Concepts",
+        link: "https://www.geeksforgeeks.org/percentages-basic-concepts/"
+      },
+      {
+        id: "3-2",
+        name: "Percentage Change",
+        link: "https://www.geeksforgeeks.org/percentage-change/"
+      },
+      {
+        id: "3-3",
+        name: "Successive Percentages",
+        link: "https://www.geeksforgeeks.org/successive-percentage/"
+      },
+      {
+        id: "3-4",
+        name: "Mixed Percentages",
+        link: "https://www.geeksforgeeks.org/mixed-percentage-problems/"
+      }
+    ]
   },
   {
     id: "4",
-    name: "Probability",
-    description: "Understand and calculate probability of events",
-    icon: "bar-chart-2",
+    name: "Profit & Loss",
+    description: "Calculate profit, loss, and percentages in business scenarios",
+    icon: "dollar-sign",
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
-    isUnlocked: true
+    isUnlocked: true,
+    subtopics: [
+      {
+        id: "4-1",
+        name: "Basic Concepts",
+        link: "https://www.geeksforgeeks.org/profit-and-loss-basics/"
+      },
+      {
+        id: "4-2",
+        name: "Marked Price & Discount",
+        link: "https://www.geeksforgeeks.org/marked-price-and-discount/"
+      },
+      {
+        id: "4-3",
+        name: "Successive Transactions",
+        link: "https://www.geeksforgeeks.org/successive-transactions/"
+      },
+      {
+        id: "4-4",
+        name: "Partnership Problems",
+        link: "https://www.geeksforgeeks.org/partnership-problems/"
+      }
+    ]
   },
   {
     id: "5",
-    name: "Data Interpretation",
-    description: "Analyze charts, graphs and tables to extract information",
-    icon: "pie-chart",
+    name: "Ratio & Proportion",
+    description: "Understand and solve problems based on ratios and proportions",
+    icon: "divide",
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
-    isUnlocked: false
+    isUnlocked: true,
+    subtopics: [
+      {
+        id: "5-1",
+        name: "Basic Ratio Concepts",
+        link: "https://www.geeksforgeeks.org/ratio-basics/"
+      },
+      {
+        id: "5-2",
+        name: "Direct Proportion",
+        link: "https://www.geeksforgeeks.org/direct-proportion/"
+      },
+      {
+        id: "5-3",
+        name: "Inverse Proportion",
+        link: "https://www.geeksforgeeks.org/inverse-proportion/"
+      },
+      {
+        id: "5-4",
+        name: "Compound Proportion",
+        link: "https://www.geeksforgeeks.org/compound-proportion/"
+      }
+    ]
   }
 ];
 
