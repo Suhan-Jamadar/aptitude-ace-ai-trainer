@@ -1,3 +1,4 @@
+
 import { ReactNode, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
@@ -5,13 +6,11 @@ import Footer from "./Footer";
 import { Topic } from "@/types";
 import { cn } from "@/lib/utils";
 
-// Define MainLayoutProps interface
 interface MainLayoutProps {
   children: ReactNode;
   showSidebar?: boolean;
 }
 
-// Updated mockTopics with new structure
 const mockTopics: Topic[] = [
   {
     id: "1",
@@ -49,7 +48,7 @@ const mockTopics: Topic[] = [
     id: "2",
     name: "Time & Work",
     description: "Calculate work efficiency and time required for tasks",
-    icon: "calendar",
+    icon: "clock",
     totalQuestions: 20,
     completedQuestions: 10,
     score: 75,
@@ -172,6 +171,38 @@ const mockTopics: Topic[] = [
         link: "https://www.geeksforgeeks.org/compound-proportion/"
       }
     ]
+  },
+  {
+    id: "6",
+    name: "Data Interpretation",
+    description: "Analyze and interpret data from charts, graphs and tables",
+    icon: "bar-chart-2",
+    totalQuestions: 20,
+    completedQuestions: 0,
+    score: 0,
+    isUnlocked: true,
+    subtopics: [
+      {
+        id: "6-1",
+        name: "Tables Analysis",
+        link: "https://www.geeksforgeeks.org/data-interpretation-tables/"
+      },
+      {
+        id: "6-2",
+        name: "Bar Graphs",
+        link: "https://www.geeksforgeeks.org/data-interpretation-bar-graphs/"
+      },
+      {
+        id: "6-3",
+        name: "Line Charts",
+        link: "https://www.geeksforgeeks.org/data-interpretation-line-charts/"
+      },
+      {
+        id: "6-4",
+        name: "Pie Charts",
+        link: "https://www.geeksforgeeks.org/data-interpretation-pie-charts/"
+      }
+    ]
   }
 ];
 
@@ -179,7 +210,7 @@ const mockTopics: Topic[] = [
 const mockUserProgress = {
   streak: 3,
   topicsCompleted: 2,
-  totalTopics: 5, // Updated to match new total
+  totalTopics: 6, // Updated to include Data Interpretation
   username: "John Doe"
 };
 

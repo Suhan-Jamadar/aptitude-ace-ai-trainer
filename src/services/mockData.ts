@@ -47,7 +47,7 @@ export const mockTopics: Topic[] = [
     id: "2",
     name: "Time & Work",
     description: "Calculate work efficiency and time required for tasks",
-    icon: "book-open",
+    icon: "clock",
     totalQuestions: 20,
     completedQuestions: 10,
     score: 75,
@@ -55,7 +55,7 @@ export const mockTopics: Topic[] = [
     subtopics: [
       {
         id: "2-1",
-        name: "Basic Concepts",
+        name: "Time and Work Basics",
         link: "https://www.geeksforgeeks.org/time-and-work-formula/"
       },
       {
@@ -111,7 +111,7 @@ export const mockTopics: Topic[] = [
     id: "4",
     name: "Profit & Loss",
     description: "Calculate profit, loss, and percentages in business scenarios",
-    icon: "dollar-sign",
+    icon: "trending-up",
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
@@ -143,7 +143,7 @@ export const mockTopics: Topic[] = [
     id: "5",
     name: "Ratio & Proportion",
     description: "Understand and solve problems based on ratios and proportions",
-    icon: "divide",
+    icon: "bar-chart-2",
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
@@ -168,6 +168,38 @@ export const mockTopics: Topic[] = [
         id: "5-4",
         name: "Compound Proportion",
         link: "https://www.geeksforgeeks.org/compound-proportion/"
+      }
+    ]
+  },
+  {
+    id: "6",
+    name: "Data Interpretation",
+    description: "Analyze and interpret data from charts, graphs and tables",
+    icon: "bar-chart-2",
+    totalQuestions: 20,
+    completedQuestions: 0,
+    score: 0,
+    isUnlocked: true,
+    subtopics: [
+      {
+        id: "6-1",
+        name: "Tables Analysis",
+        link: "https://www.geeksforgeeks.org/data-interpretation-tables/"
+      },
+      {
+        id: "6-2",
+        name: "Bar Graphs",
+        link: "https://www.geeksforgeeks.org/data-interpretation-bar-graphs/"
+      },
+      {
+        id: "6-3",
+        name: "Line Charts",
+        link: "https://www.geeksforgeeks.org/data-interpretation-line-charts/"
+      },
+      {
+        id: "6-4",
+        name: "Pie Charts",
+        link: "https://www.geeksforgeeks.org/data-interpretation-pie-charts/"
       }
     ]
   }
