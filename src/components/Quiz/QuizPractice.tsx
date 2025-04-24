@@ -8,6 +8,7 @@ import QuizQuestion from "./QuizQuestion";
 import QuizCompletion from "./QuizCompletion";
 import { useQuizState } from "@/hooks/useQuizState";
 import { formatTime } from "@/utils/timeUtils";
+import { mockQuestions } from "@/services/mockData";
 
 interface QuizPracticeProps {
   topicId: string;
@@ -17,7 +18,7 @@ interface QuizPracticeProps {
 
 const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
   const { user } = useAuth();
-  const questions = questionsData[topicId] || [];
+  const questions = mockQuestions[topicId] || [];
 
   const {
     currentQuestionIndex,
