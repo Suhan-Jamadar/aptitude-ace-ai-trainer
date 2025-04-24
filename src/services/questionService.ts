@@ -54,6 +54,30 @@ export const getQuestionsByTopic = async (topicId: string): Promise<Question[]> 
 };
 
 /**
+ * Get daily challenge questions
+ */
+export const getDailyChallenge = async (): Promise<Question[]> => {
+  try {
+    return await apiRequest('/daily-challenge');
+  } catch (error) {
+    console.error('Get daily challenge error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get grand test questions
+ */
+export const getGrandTestQuestions = async (): Promise<Question[]> => {
+  try {
+    return await apiRequest('/grand-test');
+  } catch (error) {
+    console.error('Get grand test error:', error);
+    throw error;
+  }
+};
+
+/**
  * Submit quiz results
  */
 export const submitQuizResult = async (
@@ -84,36 +108,27 @@ export const submitQuizResult = async (
 };
 
 /**
- * Update topic progress for a user
+ * Get recommendations based on user performance
  */
-export const updateTopicProgress = async (
-  userId: string,
+export const getRecommendations = async (
   topicId: string,
-  completedQuestions: number,
+  timeSpent: number,
+  attempts: number,
   score: number
-): Promise<void> => {
+): Promise<string> => {
   try {
-    await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
-      method: 'PATCH',
+    const response = await apiRequest('/recommendations', {
+      method: 'POST',
       body: JSON.stringify({
-        completedQuestions,
+        topicId,
+        timeSpent,
+        attempts,
         score
       }),
     });
+    return response.recommendation;
   } catch (error) {
-    console.error('Update topic progress error:', error);
-    throw error;
-  }
-};
-
-/**
- * Get daily challenge questions
- */
-export const getDailyChallenge = async (): Promise<Question[]> => {
-  try {
-    return await apiRequest('/daily-challenge');
-  } catch (error) {
-    console.error('Get daily challenge error:', error);
+    console.error('Get recommendations error:', error);
     throw error;
   }
 };

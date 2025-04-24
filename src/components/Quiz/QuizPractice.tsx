@@ -1,14 +1,17 @@
 
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Question } from "@/types";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import QuizQuestion from "./QuizQuestion";
 import QuizCompletion from "./QuizCompletion";
 import { useQuizState } from "@/hooks/useQuizState";
 import { formatTime } from "@/utils/timeUtils";
-import { mockQuestions } from "@/services/mockData";
+import { mockQuestions } from "@/services/mockData"; // Keep temporarily for fallback
+import { getQuestionsByTopic, getRecommendations } from "@/services/questionService";
+import { toast } from "sonner";
 
 interface QuizPracticeProps {
   topicId: string;
@@ -18,7 +21,29 @@ interface QuizPracticeProps {
 
 const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
   const { user } = useAuth();
-  const questions = mockQuestions[topicId] || [];
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [recommendation, setRecommendation] = useState<string | null>(null);
+
+  // Fetch questions from the API
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedQuestions = await getQuestionsByTopic(topicId);
+        setQuestions(fetchedQuestions);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        toast.error("Failed to load questions. Using mock data instead.");
+        // Fallback to mock data if API fails
+        setQuestions(mockQuestions[topicId] || []);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [topicId]);
 
   const {
     currentQuestionIndex,
@@ -27,6 +52,7 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
     timeSpent,
     isSubmitting,
     waitingForNextQuestion,
+    attempts,
     handleAnswerSubmit,
     handleNextQuestion
   } = useQuizState({
@@ -34,6 +60,48 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
     questions,
     userId: user?.id
   });
+
+  // Get recommendations when quiz is completed
+  useEffect(() => {
+    const getQuizRecommendations = async () => {
+      if (isCompleted && user && !recommendation) {
+        try {
+          const fetchedRecommendation = await getRecommendations(
+            topicId,
+            timeSpent,
+            attempts,
+            Math.round((score / questions.length) * 100)
+          );
+          setRecommendation(fetchedRecommendation);
+        } catch (error) {
+          console.error("Error fetching recommendations:", error);
+        }
+      }
+    };
+
+    getQuizRecommendations();
+  }, [isCompleted, user, topicId, timeSpent, attempts, score, questions.length, recommendation]);
+
+  if (isLoading) {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl">{topicName} Practice</DialogTitle>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-custom-darkBlue1" />
+            <p className="mt-4 text-gray-600">Loading questions...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -81,6 +149,7 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
                 timeSpent={timeSpent}
                 isSubmitting={isSubmitting}
                 onClose={onClose}
+                recommendation={recommendation}
               />
             )}
           </>

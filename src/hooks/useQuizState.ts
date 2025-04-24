@@ -23,18 +23,32 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
   const [waitingForNextQuestion, setWaitingForNextQuestion] = useState(false);
 
   useEffect(() => {
-    // Get previous attempts data if available
-    const attemptData = localStorage.getItem(`${topicId}_attempts`);
-    if (attemptData) {
-      const data = JSON.parse(attemptData);
-      setAttempts(data.attempts || 0);
-      setAvgTime(data.avgTime || 0);
-    }
+    // Reset the state when the questions change
+    if (questions.length > 0) {
+      setCurrentQuestionIndex(0);
+      setScore(0);
+      setIsCompleted(false);
+      setStartTime(Date.now());
+      setTimeSpent(0);
+      setWaitingForNextQuestion(false);
+      
+      // Get previous attempts data if available
+      const attemptData = localStorage.getItem(`${topicId}_attempts`);
+      if (attemptData) {
+        const data = JSON.parse(attemptData);
+        setAttempts(data.attempts || 0);
+        setAvgTime(data.avgTime || 0);
+      }
 
-    // Update time spent
-    timerRef.current = setInterval(() => {
-      setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
+      // Update time spent
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      
+      timerRef.current = setInterval(() => {
+        setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    }
 
     return () => {
       if (timerRef.current) {
@@ -42,7 +56,7 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
         timerRef.current = null;
       }
     };
-  }, [topicId, startTime]);
+  }, [topicId, startTime, questions]);
 
   const handleAnswerSubmit = (isCorrect: boolean) => {
     if (isCorrect) {
@@ -121,6 +135,7 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
     timeSpent,
     isSubmitting,
     waitingForNextQuestion,
+    attempts,
     handleAnswerSubmit,
     handleNextQuestion
   };

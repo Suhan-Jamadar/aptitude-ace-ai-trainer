@@ -4,54 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Question } from "@/types";
 import QuizQuestion from "./QuizQuestion";
-import { Clock, X, Trophy } from "lucide-react";
+import { Clock, X, Trophy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateUserStreak } from "@/services/progressService";
-
-// Mock daily challenge questions
-const dailyChallengeQuestions: Question[] = [
-  {
-    id: "dc1",
-    topicId: "1", // Number Series
-    question: "Find the next number in the sequence: 2, 6, 12, 20, 30, ?",
-    options: ["42", "40", "36", "48"],
-    correctAnswer: "42",
-    explanation: "The sequence follows the pattern of adding consecutive even numbers: 2, +4, +6, +8, +10, +12. So 30 + 12 = 42."
-  },
-  {
-    id: "dc2",
-    topicId: "2", // Time & Work
-    question: "If 5 men can complete a work in 8 days, then in how many days can 10 men complete the same work?",
-    options: ["4 days", "5 days", "6 days", "3 days"],
-    correctAnswer: "4 days",
-    explanation: "Using the formula (M₁ × D₁) = (M₂ × D₂), we get (5 × 8) = (10 × D₂). So D₂ = 4 days."
-  },
-  {
-    id: "dc3",
-    topicId: "3", // Percentages
-    question: "A shirt is discounted by 20% and then by 25%. What is the total discount percentage?",
-    options: ["40%", "45%", "35%", "50%"],
-    correctAnswer: "40%",
-    explanation: "After a 20% discount, the price is 80% of original. After another 25% discount, the price is 75% of 80%, which is 60% of original price. So the total discount is 40%."
-  },
-  {
-    id: "dc4",
-    topicId: "4", // Probability
-    question: "A jar contains 4 red balls and 6 blue balls. If two balls are drawn at random without replacement, what is the probability that both are red?",
-    options: ["2/15", "1/3", "2/5", "1/10"],
-    correctAnswer: "2/15",
-    explanation: "P(both red) = (4C2)/(10C2) = 6/45 = 2/15."
-  },
-  {
-    id: "dc5",
-    topicId: "5", // Data Interpretation
-    question: "Based on the pie chart, if Company A has 25% market share and Company B has 35%, what is the difference in their market shares?",
-    options: ["10%", "5%", "15%", "20%"],
-    correctAnswer: "10%",
-    explanation: "The difference in market share is 35% - 25% = 10%."
-  }
-];
+import { getDailyChallenge, getRecommendations } from "@/services/questionService";
+import { mockQuestions } from "@/services/mockData"; // Keep temporarily for fallback
 
 interface DailyChallengeProps {
   onClose: () => void;
@@ -67,22 +25,69 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [recommendation, setRecommendation] = useState<string | null>(null);
+
+  // Fetch daily challenge questions from the API
+  useEffect(() => {
+    const fetchDailyChallengeQuestions = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedQuestions = await getDailyChallenge();
+        setQuestions(fetchedQuestions);
+      } catch (error) {
+        console.error("Error fetching daily challenge questions:", error);
+        toast.error("Failed to load daily challenge. Using mock data instead.");
+        
+        // Use the mock daily challenge questions as fallback
+        const dailyChallengeQuestions = mockQuestions["dailyChallenge"] || [];
+        if (dailyChallengeQuestions.length === 0) {
+          // If there's no daily challenge mock data, pick random questions from mock topics
+          const allMockQuestions: Question[] = [];
+          Object.values(mockQuestions).forEach(topicQuestions => {
+            if (Array.isArray(topicQuestions) && topicQuestions.length > 0) {
+              allMockQuestions.push(...topicQuestions);
+            }
+          });
+          
+          // Select 5 random questions if available
+          const randomQuestions: Question[] = [];
+          for (let i = 0; i < 5 && allMockQuestions.length > 0; i++) {
+            const randomIndex = Math.floor(Math.random() * allMockQuestions.length);
+            randomQuestions.push(allMockQuestions[randomIndex]);
+            allMockQuestions.splice(randomIndex, 1);
+          }
+          
+          setQuestions(randomQuestions);
+        } else {
+          setQuestions(dailyChallengeQuestions);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDailyChallengeQuestions();
+  }, []);
 
   useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
+    if (!isLoading && questions.length > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            setIsCompleted(true);
+            completeChallenge();
+            return 0;
           }
-          setIsCompleted(true);
-          completeChallenge();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+          return prev - 1;
+        });
+      }, 1000);
+    }
 
     return () => {
       if (timerRef.current) {
@@ -90,7 +95,7 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
         timerRef.current = null;
       }
     };
-  }, []);
+  }, [isLoading, questions]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -110,9 +115,12 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
 
   const handleNextQuestion = () => {
     if (timeRemaining > 0) {
-      // Generate a random question from the pool
-      const randomIndex = Math.floor(Math.random() * dailyChallengeQuestions.length);
-      setCurrentQuestionIndex(randomIndex);
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      } else {
+        // Loop back to the first question if we've gone through all questions
+        setCurrentQuestionIndex(0);
+      }
     } else {
       completeChallenge();
     }
@@ -141,6 +149,19 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
           const currentStreak = user.streak || 0;
           await updateUserStreak(user.id, currentStreak + 1);
           toast.success("Daily streak increased!");
+          
+          // Get recommendation based on performance
+          try {
+            const fetchedRecommendation = await getRecommendations(
+              "dailyChallenge",
+              300 - timeRemaining, // Time spent in seconds
+              1, // Daily challenge is one attempt
+              Math.round((score / (questions.length * 2)) * 100) // Score percentage
+            );
+            setRecommendation(fetchedRecommendation);
+          } catch (error) {
+            console.error("Error fetching recommendations:", error);
+          }
         } catch (error) {
           console.error("Error updating streak:", error);
           toast.error("Failed to update streak");
@@ -159,6 +180,27 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
     return formatTime(Math.min(timeSpentInSeconds, 5 * 60)); // Cap at 5 minutes
   };
 
+  if (isLoading) {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl">Daily Challenge</DialogTitle>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-custom-darkBlue1" />
+            <p className="mt-4 text-gray-600">Loading daily challenge...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl">
@@ -174,22 +216,24 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
         {!isCompleted ? (
           <div>
             <div className="flex justify-between text-sm text-gray-500 mb-2">
-              <span>Question {currentQuestionIndex + 1}</span>
+              <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
               <div className={`flex items-center ${timeRemaining < 60 ? 'text-red-500 animate-pulse' : ''}`}>
                 <Clock className={`h-4 w-4 mr-1 ${timeRemaining < 60 ? 'text-red-500' : ''}`} />
                 <span>Time remaining: {formatTime(timeRemaining)}</span>
               </div>
             </div>
 
-            <QuizQuestion
-              question={dailyChallengeQuestions[currentQuestionIndex]}
-              onAnswerSubmit={(isCorrect) => {
-                handleAnswerSubmit(isCorrect);
-                setTimeout(handleNextQuestion, 1500);
-              }}
-              questionNumber={currentQuestionIndex + 1}
-              totalQuestions={dailyChallengeQuestions.length}
-            />
+            {questions.length > 0 && (
+              <QuizQuestion
+                question={questions[currentQuestionIndex]}
+                onAnswerSubmit={(isCorrect) => {
+                  handleAnswerSubmit(isCorrect);
+                  setTimeout(handleNextQuestion, 1500);
+                }}
+                questionNumber={currentQuestionIndex + 1}
+                totalQuestions={questions.length}
+              />
+            )}
           </div>
         ) : (
           <div className="text-center py-6">
@@ -203,6 +247,16 @@ const DailyChallenge = ({ onClose }: DailyChallengeProps) => {
             {streakIncreased && (
               <div className="bg-custom-gold/20 p-3 rounded-lg mb-4 animate-pulse">
                 <p className="text-custom-gold font-medium">🔥 Daily streak increased!</p>
+              </div>
+            )}
+            
+            {recommendation && (
+              <div className="mt-4 mb-4 bg-blue-50 p-4 rounded-lg text-left">
+                <div className="flex items-center mb-2">
+                  <Clock className="h-5 w-5 text-custom-darkBlue1 mr-2" />
+                  <h4 className="font-medium text-custom-darkBlue1">Today's Recommendation</h4>
+                </div>
+                <p className="text-gray-700">{recommendation}</p>
               </div>
             )}
             
