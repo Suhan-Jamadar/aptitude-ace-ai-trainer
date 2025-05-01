@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Question } from "@/types";
-import { submitQuizResult, updateTopicProgress } from "@/services/questionService";
+import { submitQuizResult } from "@/services/questionService";
 import { toast } from "sonner";
 
 interface UseQuizStateProps {
@@ -21,6 +21,11 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
   const [attempts, setAttempts] = useState(0);
   const [avgTime, setAvgTime] = useState(0);
   const [waitingForNextQuestion, setWaitingForNextQuestion] = useState(false);
+  const [performance, setPerformance] = useState<{
+    questionId: string;
+    correct: boolean;
+    timeSpent: number;
+  }[]>([]);
 
   useEffect(() => {
     // Reset the state when the questions change
@@ -31,6 +36,7 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
       setStartTime(Date.now());
       setTimeSpent(0);
       setWaitingForNextQuestion(false);
+      setPerformance([]);
       
       // Get previous attempts data if available
       const attemptData = localStorage.getItem(`${topicId}_attempts`);
@@ -59,10 +65,22 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
   }, [topicId, startTime, questions]);
 
   const handleAnswerSubmit = (isCorrect: boolean) => {
-    if (isCorrect) {
-      setScore(score + 1);
+    if (questions.length > 0) {
+      // Record performance for this question
+      setPerformance(prev => [
+        ...prev, 
+        {
+          questionId: questions[currentQuestionIndex].id,
+          correct: isCorrect,
+          timeSpent: Math.floor((Date.now() - startTime) / 1000) - timeSpent
+        }
+      ]);
+      
+      if (isCorrect) {
+        setScore(score + 1);
+      }
+      setWaitingForNextQuestion(true);
     }
-    setWaitingForNextQuestion(true);
   };
 
   const recordQuizResults = async () => {
@@ -79,7 +97,19 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
     // Save to local storage
     localStorage.setItem(`${topicId}_attempts`, JSON.stringify({
       attempts: newAttempts,
-      avgTime: newAvgTime
+      avgTime: newAvgTime,
+      lastScore: finalScore,
+      performance: performance
+    }));
+    
+    // Save performance data for analytics
+    localStorage.setItem(`${topicId}_lastPerformance`, JSON.stringify({
+      date: new Date().toISOString(),
+      score: finalScore,
+      timeSpent: finalTimeSpent,
+      questions: questions.length,
+      correctAnswers: score,
+      performance: performance
     }));
     
     // If user is authenticated, save to backend
@@ -92,13 +122,6 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
           finalTimeSpent,
           questions.length,
           score
-        );
-        
-        await updateTopicProgress(
-          userId,
-          topicId,
-          Math.min(questions.length, questions.length),
-          finalScore
         );
         
         toast.success("Quiz results saved successfully!");
@@ -136,6 +159,7 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
     isSubmitting,
     waitingForNextQuestion,
     attempts,
+    performance,
     handleAnswerSubmit,
     handleNextQuestion
   };

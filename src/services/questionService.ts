@@ -108,6 +108,29 @@ export const submitQuizResult = async (
 };
 
 /**
+ * Update user's progress for a specific topic
+ */
+export const updateTopicProgress = async (
+  userId: string,
+  topicId: string,
+  questionsAttempted: number,
+  score: number
+): Promise<void> => {
+  try {
+    await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        questionsAttempted,
+        score
+      }),
+    });
+  } catch (error) {
+    console.error('Update topic progress error:', error);
+    throw error;
+  }
+};
+
+/**
  * Get recommendations based on user performance
  */
 export const getRecommendations = async (
@@ -129,29 +152,6 @@ export const getRecommendations = async (
     return response.recommendation;
   } catch (error) {
     console.error('Get recommendations error:', error);
-    throw error;
-  }
-};
-
-/**
- * Update user's progress for a specific topic
- */
-export const updateTopicProgress = async (
-  userId: string,
-  topicId: string,
-  questionsAttempted: number,
-  score: number
-): Promise<void> => {
-  try {
-    await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        questionsAttempted,
-        score
-      }),
-    });
-  } catch (error) {
-    console.error('Update topic progress error:', error);
     throw error;
   }
 };

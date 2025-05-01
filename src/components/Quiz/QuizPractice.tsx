@@ -11,6 +11,7 @@ import { useQuizState } from "@/hooks/useQuizState";
 import { formatTime } from "@/utils/timeUtils";
 import { mockQuestions } from "@/services/mockData"; // Keep temporarily for fallback
 import { getQuestionsByTopic, getRecommendations } from "@/services/questionService";
+import Timer from "./Timer";
 import { toast } from "sonner";
 
 interface QuizPracticeProps {
@@ -24,6 +25,8 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [timeLimitSeconds] = useState(300); // 5 minutes time limit
+  const [questionTimeData, setQuestionTimeData] = useState<{questionId: string, timeSpent: number}[]>([]);
 
   // Fetch questions from the API
   useEffect(() => {
@@ -60,6 +63,21 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
     questions,
     userId: user?.id
   });
+
+  // Track time spent on each question
+  const handleQuestionSubmit = (isCorrect: boolean, questionTimeSpent: number) => {
+    // Record time data for analytics
+    setQuestionTimeData(prev => [
+      ...prev,
+      { 
+        questionId: questions[currentQuestionIndex].id, 
+        timeSpent: questionTimeSpent 
+      }
+    ]);
+    
+    // Call the original submit handler
+    handleAnswerSubmit(isCorrect);
+  };
 
   // Get recommendations when quiz is completed
   useEffect(() => {
@@ -119,14 +137,21 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
           <>
             {!isCompleted ? (
               <div>
-                <div className="flex justify-between text-sm text-gray-500 mb-2">
+                <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
                   <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
-                  <span>Time: {formatTime(timeSpent)}</span>
+                  <Timer 
+                    initialSeconds={timeLimitSeconds} 
+                    onTimeout={() => {
+                      toast.warning("Time's up! Completing the quiz now.");
+                      // Handle quiz completion due to timeout
+                      setIsCompleted(true);
+                    }}
+                  />
                 </div>
 
                 <QuizQuestion
                   question={questions[currentQuestionIndex]}
-                  onAnswerSubmit={handleAnswerSubmit}
+                  onAnswerSubmit={handleQuestionSubmit}
                   questionNumber={currentQuestionIndex + 1}
                   totalQuestions={questions.length}
                 />
@@ -150,6 +175,11 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
                 isSubmitting={isSubmitting}
                 onClose={onClose}
                 recommendation={recommendation}
+                performanceData={questionTimeData.length > 0 ? {
+                  averageTimePerQuestion: questionTimeData.reduce((sum, item) => sum + item.timeSpent, 0) / questionTimeData.length,
+                  fastestQuestion: Math.min(...questionTimeData.map(item => item.timeSpent)),
+                  slowestQuestion: Math.max(...questionTimeData.map(item => item.timeSpent)),
+                } : undefined}
               />
             )}
           </>

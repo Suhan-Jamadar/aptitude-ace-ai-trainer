@@ -4,10 +4,11 @@ import { Question } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { shuffleArray } from "@/utils/arrayUtils";
+import Timer from "./Timer";
 
 interface QuizQuestionProps {
   question: Question;
-  onAnswerSubmit: (isCorrect: boolean) => void;
+  onAnswerSubmit: (isCorrect: boolean, timeSpent: number) => void;
   questionNumber: number;
   totalQuestions: number;
 }
@@ -22,6 +23,7 @@ const QuizQuestion = ({
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [randomizedOptions, setRandomizedOptions] = useState<string[]>([]);
+  const [startTime] = useState<number>(Date.now());
   
   useEffect(() => {
     // Reset state when question changes
@@ -32,13 +34,13 @@ const QuizQuestion = ({
     // Randomize options when question changes
     setRandomizedOptions(shuffleArray(question.options));
     
-    const startTime = Date.now();
     const timer = setInterval(() => {
-      setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setTimeSpent(elapsed);
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [question.id]); // Reset timer and randomize options when question changes
+  }, [question.id, startTime]); // Reset timer and randomize options when question changes
 
   const handleOptionSelect = (option: string) => {
     if (!hasSubmitted) {
@@ -50,7 +52,7 @@ const QuizQuestion = ({
     if (selectedOption) {
       setHasSubmitted(true);
       const isCorrect = selectedOption === question.correctAnswer;
-      onAnswerSubmit(isCorrect);
+      onAnswerSubmit(isCorrect, timeSpent);
     }
   };
 
