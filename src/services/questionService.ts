@@ -132,3 +132,26 @@ export const getRecommendations = async (
     throw error;
   }
 };
+
+/**
+ * Update user's progress for a specific topic
+ */
+export const updateTopicProgress = async (
+  userId: string,
+  topicId: string,
+  questionsAttempted: number,
+  score: number
+): Promise<void> => {
+  try {
+    await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        questionsAttempted,
+        score
+      }),
+    });
+  } catch (error) {
+    console.error('Update topic progress error:', error);
+    throw error;
+  }
+};
