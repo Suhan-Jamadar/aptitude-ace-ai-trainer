@@ -155,6 +155,7 @@ export const useQuizState = ({ topicId, questions, userId }: UseQuizStateProps) 
     currentQuestionIndex,
     score,
     isCompleted,
+    setIsCompleted, // Expose the setIsCompleted function
     timeSpent,
     isSubmitting,
     waitingForNextQuestion,

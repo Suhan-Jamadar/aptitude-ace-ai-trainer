@@ -57,7 +57,8 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
     waitingForNextQuestion,
     attempts,
     handleAnswerSubmit,
-    handleNextQuestion
+    handleNextQuestion,
+    setIsCompleted // Extract setIsCompleted from the hook
   } = useQuizState({
     topicId,
     questions,
@@ -143,7 +144,7 @@ const QuizPractice = ({ topicId, topicName, onClose }: QuizPracticeProps) => {
                     initialSeconds={timeLimitSeconds} 
                     onTimeout={() => {
                       toast.warning("Time's up! Completing the quiz now.");
-                      // Handle quiz completion due to timeout
+                      // Use setIsCompleted function from the hook
                       setIsCompleted(true);
                     }}
                   />
