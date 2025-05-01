@@ -1,5 +1,7 @@
 
 import { useState, useEffect } from "react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card } from "@/components/ui/card";
 
 interface TopicConceptsProps {
   topicId: string;
@@ -31,6 +33,15 @@ const mockConceptsContent: Record<string, { title: string; content: string[] }[]
         "A multiple of a number is any number that is the product of that number and an integer.",
         "The Least Common Multiple (LCM) of two numbers is the smallest positive number that is divisible by both."
       ]
+    },
+    {
+      title: "Divisibility Rules",
+      content: [
+        "A number is divisible by 2 if its last digit is even (0, 2, 4, 6, 8).",
+        "A number is divisible by 3 if the sum of all its digits is divisible by 3.",
+        "A number is divisible by 5 if its last digit is 0 or 5.",
+        "A number is divisible by 9 if the sum of all its digits is divisible by 9."
+      ]
     }
   ],
   "t2": [
@@ -40,6 +51,14 @@ const mockConceptsContent: Record<string, { title: string; content: string[] }[]
         "A ratio is a comparison of two quantities expressed as a fraction.",
         "A proportion is an equation stating that two ratios are equal.",
         "The cross multiplication method is used to solve proportions: If a/b = c/d, then ad = bc."
+      ]
+    },
+    {
+      title: "Understanding Percentages",
+      content: [
+        "A percentage is a number expressed as a fraction of 100.",
+        "To convert a percentage to a decimal, divide by 100.",
+        "To find a percentage of a number, multiply the number by the percentage expressed as a decimal."
       ]
     }
   ]
@@ -60,25 +79,50 @@ const TopicConcepts = ({ topicId }: TopicConceptsProps) => {
   }, [topicId]);
 
   if (loading) {
-    return <div className="flex justify-center p-12">Loading concepts...</div>;
+    return (
+      <div className="flex flex-col gap-4 py-4">
+        <div className="animate-pulse h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div className="animate-pulse h-24 bg-gray-200 rounded w-full mb-6"></div>
+        <div className="animate-pulse h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div className="animate-pulse h-24 bg-gray-200 rounded w-full"></div>
+      </div>
+    );
   }
 
   if (concepts.length === 0) {
-    return <div>No concept information available for this topic.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <div className="text-4xl mb-4">📚</div>
+        <h3 className="text-xl font-medium mb-2">No theory available yet</h3>
+        <p className="text-gray-500">We're still working on this content. Check back soon!</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8 bg-white p-6 rounded-lg shadow">
-      {concepts.map((concept, index) => (
-        <div key={index} className={index > 0 ? "pt-8 border-t border-gray-200" : ""}>
-          <h3 className="text-xl font-semibold text-custom-darkBlue1 mb-4">{concept.title}</h3>
-          <div className="space-y-3">
-            {concept.content.map((paragraph, pIndex) => (
-              <p key={pIndex} className="text-gray-700">{paragraph}</p>
-            ))}
-          </div>
-        </div>
-      ))}
+    <div className="space-y-8">
+      <h2 className="text-2xl font-bold text-custom-darkBlue1 mb-6">Theoretical Concepts</h2>
+      
+      <Accordion type="single" collapsible className="w-full">
+        {concepts.map((concept, index) => (
+          <AccordionItem key={index} value={`concept-${index}`} className="border-b border-gray-200">
+            <AccordionTrigger className="text-lg font-semibold text-custom-darkBlue1 hover:text-custom-gold py-4">
+              {concept.title}
+            </AccordionTrigger>
+            <AccordionContent>
+              <Card className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                <div className="space-y-4">
+                  {concept.content.map((paragraph, pIndex) => (
+                    <p key={pIndex} className="text-gray-700 leading-relaxed">
+                      • {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </div>
   );
 };
