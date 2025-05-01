@@ -7,12 +7,14 @@ import {
   Percent,
   BarChart2,
   PieChart,
-  Clock
+  Clock,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import QuizPractice from "@/components/Quiz/QuizPractice";
+import { useNavigate } from "react-router-dom";
 
 interface TopicCardProps {
   topic: Topic;
@@ -27,8 +29,14 @@ const iconMap = {
 };
 
 export const TopicCard = ({ topic }: TopicCardProps) => {
-  const [showPractice, setShowPractice] = useState(false);
+  const navigate = useNavigate();
   const progress = (topic.completedQuestions / topic.totalQuestions) * 100;
+
+  const handleTopicClick = () => {
+    if (topic.isUnlocked) {
+      navigate(`/aptitude/topic/${topic.id}`);
+    }
+  };
 
   return (
     <motion.div 
@@ -36,10 +44,12 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
         bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl
         transition-all duration-300 transform hover:-translate-y-1
         ${!topic.isUnlocked ? "opacity-75 grayscale" : ""}
+        ${topic.isUnlocked ? "cursor-pointer" : ""}
       `}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Number(topic.id) * 0.1 }}
+      onClick={handleTopicClick}
     >
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
@@ -89,20 +99,15 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
           <Button
             className="w-full bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
             disabled={!topic.isUnlocked}
-            onClick={() => setShowPractice(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTopicClick();
+            }}
           >
-            Practice
+            Explore Topic <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       </div>
-
-      {showPractice && (
-        <QuizPractice 
-          topicId={topic.id} 
-          topicName={topic.name} 
-          onClose={() => setShowPractice(false)} 
-        />
-      )}
     </motion.div>
   );
 };
