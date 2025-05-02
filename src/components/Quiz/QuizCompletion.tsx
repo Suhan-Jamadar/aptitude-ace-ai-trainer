@@ -7,6 +7,7 @@ interface PerformanceData {
   averageTimePerQuestion: number;
   fastestQuestion: number;
   slowestQuestion: number;
+  streak?: number; // Added streak as optional property
 }
 
 interface QuizCompletionProps {
@@ -17,6 +18,8 @@ interface QuizCompletionProps {
   isSubmitting?: boolean;
   recommendation?: string | null;
   performanceData?: PerformanceData;
+  isAuthenticated?: boolean;
+  onAuthRequired?: () => void;
 }
 
 const QuizCompletion = ({
@@ -26,7 +29,9 @@ const QuizCompletion = ({
   onClose,
   isSubmitting = false,
   recommendation,
-  performanceData
+  performanceData,
+  isAuthenticated,
+  onAuthRequired
 }: QuizCompletionProps) => {
   const percentage = Math.round((score / totalQuestions) * 100);
   const isPassed = percentage >= 70;
@@ -74,6 +79,13 @@ const QuizCompletion = ({
                     <p className="text-xs text-blue-700">Slowest: {performanceData.slowestQuestion}s</p>
                   </div>
                 </div>
+                
+                {/* Display streak if it exists */}
+                {performanceData.streak && performanceData.streak > 0 && (
+                  <div className="mt-2 bg-amber-100 p-2 rounded">
+                    <p className="text-xs text-amber-700">🔥 Streak: {performanceData.streak}</p>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -119,6 +131,23 @@ const QuizCompletion = ({
             <h4 className="font-medium text-yellow-800">Recommendation</h4>
           </div>
           <p className="text-sm text-gray-700">{recommendation}</p>
+        </div>
+      )}
+
+      {!isAuthenticated && (
+        <div className="w-full max-w-md bg-blue-50 p-4 rounded-lg mb-6">
+          <div className="flex items-center mb-2">
+            <ArrowRight className="h-5 w-5 text-blue-600 mr-2" />
+            <h4 className="font-medium text-blue-800">Save Your Progress</h4>
+          </div>
+          <p className="text-sm text-gray-700">
+            <button 
+              onClick={onAuthRequired} 
+              className="font-medium underline cursor-pointer"
+            >
+              Sign in
+            </button> to track your progress and get personalized recommendations.
+          </p>
         </div>
       )}
 
