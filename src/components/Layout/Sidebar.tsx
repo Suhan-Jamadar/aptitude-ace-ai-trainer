@@ -51,7 +51,13 @@ const Sidebar = ({ topics, userProgress, isSidebarCollapsed, onToggleSidebar }: 
 
   const progressPercentage = (userProgress.topicsCompleted / userProgress.totalTopics) * 100;
 
-  const filteredTopics = topics.filter(topic =>
+  // Filter out any duplicates based on the topic id
+  const uniqueTopics = topics.filter(
+    (topic, index, self) => index === self.findIndex(t => t.id === topic.id)
+  );
+
+  // Then filter based on search query
+  const filteredTopics = uniqueTopics.filter(topic =>
     topic.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

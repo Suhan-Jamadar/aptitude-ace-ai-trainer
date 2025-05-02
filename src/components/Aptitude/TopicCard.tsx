@@ -19,6 +19,7 @@ interface TopicCardProps {
   topic: Topic;
 }
 
+// Updated icon map with appropriate icons for each topic
 const iconMap = {
   "calculator": <Calculator className="h-6 w-6" />,
   "clock": <Clock className="h-6 w-6" />,
@@ -31,6 +32,12 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const progress = (topic.completedQuestions / topic.totalQuestions) * 100;
+
+  // Get appropriate display name based on the topic
+  const getTopicDisplayName = (topic: Topic) => {
+    // Return the name directly as we've already updated the names to be correct
+    return topic.name;
+  };
 
   const handleTopicClick = () => {
     if (topic.isUnlocked) {
@@ -57,7 +64,7 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
             <div className="p-3 rounded-lg bg-custom-gold/10 text-custom-gold mr-4">
               {iconMap[topic.icon as keyof typeof iconMap] || <Calculator className="h-6 w-6" />}
             </div>
-            <h3 className="text-xl font-semibold text-custom-darkBlue1">{topic.name}</h3>
+            <h3 className="text-xl font-semibold text-custom-darkBlue1">{getTopicDisplayName(topic)}</h3>
           </div>
           {topic.score > 0 && (
             <div className="bg-custom-gold/10 px-3 py-1 rounded-full">

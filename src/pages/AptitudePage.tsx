@@ -21,12 +21,17 @@ const AptitudePage = () => {
   const [topics, setTopics] = useState<Topic[]>(mockTopics);
   const { user, isAuthenticated, refreshUserProfile } = useAuth();
   
+  // Filter out any duplicates based on the topic id
+  const uniqueTopics = topics.filter(
+    (topic, index, self) => index === self.findIndex(t => t.id === topic.id)
+  );
+  
   // Calculate completed topics based on user progress
-  const completedTopics = topics.filter(topic => topic.completedQuestions > 0).length;
-  const totalTopics = topics.length;
+  const completedTopics = uniqueTopics.filter(topic => topic.completedQuestions > 0).length;
+  const totalTopics = uniqueTopics.length;
   
   // Grand test is unlocked if user has completed all topics with at least 70% score
-  const isGrandTestUnlocked = topics.every(topic => 
+  const isGrandTestUnlocked = uniqueTopics.every(topic => 
     topic.isUnlocked && (topic.score >= 70 || topic.score === 0)
   );
   
@@ -112,7 +117,7 @@ const AptitudePage = () => {
           )}
         </div>
         
-        <TopicList topics={topics} />
+        <TopicList topics={uniqueTopics} />
       </motion.div>
 
       {showDailyChallenge && (
