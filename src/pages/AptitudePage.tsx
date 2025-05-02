@@ -42,7 +42,12 @@ const AptitudePage = () => {
         try {
           const fetchedTopics = await getTopics();
           if (fetchedTopics && fetchedTopics.length > 0) {
-            setTopics(fetchedTopics);
+            // Ensure we have only the 6 core topics we need
+            const coreTopics = fetchedTopics.filter(topic => 
+              ["Quantitative Aptitude", "Time & Work", "Time, Speed & Distance", 
+               "Percentages", "Profit & Loss", "Data Interpretation"].includes(topic.name)
+            );
+            setTopics(coreTopics);
           }
         } catch (error) {
           console.error("Failed to fetch topics:", error);

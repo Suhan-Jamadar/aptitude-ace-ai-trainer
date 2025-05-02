@@ -14,7 +14,7 @@ interface MainLayoutProps {
   showSidebar?: boolean;
 }
 
-// Default topics with correct icons for the 6 required categories - updated and fixed
+// Default topics with correct icons for the 6 required categories
 const defaultTopics: Topic[] = [
   {
     id: "1",

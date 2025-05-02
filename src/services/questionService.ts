@@ -38,6 +38,7 @@ const apiRequest = async (endpoint: string, options = {}) => {
  */
 export const getTopics = async (): Promise<Topic[]> => {
   try {
+    // This will get user-specific topics with their progress
     return await apiRequest('/topics');
   } catch (error) {
     console.error('Get topics error:', error);
@@ -117,9 +118,6 @@ export const submitQuizResult = async (
         performance: JSON.parse(localStorage.getItem(`${topicId}_lastPerformance`) || '{}')
       }),
     });
-    
-    // Also update user's topic progress
-    await updateTopicProgress(userId, topicId, questionsAttempted, score);
   } catch (error) {
     console.error('Submit quiz result error:', error);
     throw error;

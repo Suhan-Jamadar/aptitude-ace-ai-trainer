@@ -2,8 +2,10 @@
 import { useEffect } from "react";
 import { useQuizStorage } from "./useQuizStorage";
 import { submitQuizResult } from "@/services/questionService";
+import { updateTopicProgress } from "@/services/progressService";
 import { toast } from "sonner";
 import { Question } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UseQuizResultsProps {
   topicId: string;
@@ -39,6 +41,8 @@ export const useQuizResults = ({
     saveLocalResults,
     queuePendingSubmission 
   } = useQuizStorage({ topicId });
+  
+  const { refreshUserProfile } = useAuth();
 
   // Record quiz results to backend and local storage
   useEffect(() => {
@@ -63,6 +67,7 @@ export const useQuizResults = ({
       // If user is authenticated, save to backend
       if (userId) {
         try {
+          // Submit quiz result
           await submitQuizResult(
             userId,
             topicId,
@@ -71,6 +76,18 @@ export const useQuizResults = ({
             questions.length,
             score
           );
+          
+          // Update topic progress
+          await updateTopicProgress(
+            userId,
+            topicId,
+            score, // completed questions is equal to correct answers
+            questions.length,
+            finalScore
+          );
+          
+          // Refresh user profile to update UI
+          await refreshUserProfile();
           
           toast.success("Quiz results saved successfully!");
         } catch (error) {
@@ -96,7 +113,7 @@ export const useQuizResults = ({
     if (isCompleted && questions.length > 0) {
       recordQuizResults();
     }
-  }, [isCompleted, questions, topicId, userId, score, timeSpent, performance, streak, setIsSubmitting]);
+  }, [isCompleted, questions, topicId, userId, score, timeSpent, performance, streak, setIsSubmitting, refreshUserProfile]);
 
   return {
     isSubmitting

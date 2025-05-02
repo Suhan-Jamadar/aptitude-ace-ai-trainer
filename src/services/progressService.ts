@@ -62,6 +62,32 @@ export const updateUserStreak = async (
 };
 
 /**
+ * Update topic progress for a specific user
+ */
+export const updateTopicProgress = async (
+  userId: string,
+  topicId: string,
+  completedQuestions: number,
+  totalQuestions: number,
+  score: number
+): Promise<void> => {
+  try {
+    await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        completedQuestions,
+        totalQuestions,
+        score,
+        lastUpdated: new Date().toISOString()
+      }),
+    });
+  } catch (error) {
+    console.error('Update topic progress error:', error);
+    throw error;
+  }
+};
+
+/**
  * Unlock the Grand Test for a user
  */
 export const unlockGrandTest = async (userId: string): Promise<void> => {
