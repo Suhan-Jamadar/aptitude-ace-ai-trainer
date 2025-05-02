@@ -1,11 +1,14 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   User,
   BookOpen,
   BarChart2,
-  Calendar,
-  TrendingUp,
+  Calculator,
+  Clock,
+  Percent,
+  DollarSign,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -17,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Topic } from "@/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   topics: Topic[];
@@ -30,10 +34,20 @@ interface SidebarProps {
   onToggleSidebar: () => void;
 }
 
+// Map of topic icon names to their components
+const iconMap: Record<string, JSX.Element> = {
+  "calculator": <Calculator className="h-4 w-4 text-custom-gold" />,
+  "clock": <Clock className="h-4 w-4 text-custom-gold" />,
+  "percent": <Percent className="h-4 w-4 text-custom-gold" />,
+  "bar-chart": <BarChart2 className="h-4 w-4 text-custom-gold" />,
+  "dollar-sign": <DollarSign className="h-4 w-4 text-custom-gold" />
+};
+
 const Sidebar = ({ topics, userProgress, isSidebarCollapsed, onToggleSidebar }: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const [expandedTopics, setExpandedTopics] = useState<string[]>([]);
+  const { isAuthenticated } = useAuth();
 
   const progressPercentage = (userProgress.topicsCompleted / userProgress.totalTopics) * 100;
 
@@ -99,16 +113,23 @@ const Sidebar = ({ topics, userProgress, isSidebarCollapsed, onToggleSidebar }: 
       {/* Progress Section with Gradient */}
       <div className={cn("px-3 py-3", isSidebarCollapsed && "px-2")}>
         <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className="h-5 w-5 text-custom-gold" />
+          <BarChart2 className="h-5 w-5 text-custom-gold" />
           {!isSidebarCollapsed && <h3 className="font-medium">Progress</h3>}
         </div>
         <Progress 
-          value={progressPercentage} 
+          value={isAuthenticated ? progressPercentage : 0} 
           className="h-2 bg-custom-darkBlue2"
           style={{
             background: 'linear-gradient(90deg, hsla(46, 73%, 75%, 1) 0%, hsla(176, 73%, 88%, 1) 100%)'
           }}
         />
+        {!isSidebarCollapsed && (
+          <div className="mt-1 text-xs text-gray-300">
+            {isAuthenticated 
+              ? `${userProgress.topicsCompleted}/${userProgress.totalTopics} topics completed` 
+              : "Sign in to track progress"}
+          </div>
+        )}
       </div>
 
       {/* Topics Section with Expandable Subtopics */}
@@ -131,7 +152,7 @@ const Sidebar = ({ topics, userProgress, isSidebarCollapsed, onToggleSidebar }: 
                 )}
               >
                 <div className="bg-custom-gold/20 p-1.5 rounded-md">
-                  <BarChart2 className="h-4 w-4 text-custom-gold" />
+                  {iconMap[topic.icon] || <BarChart2 className="h-4 w-4 text-custom-gold" />}
                 </div>
                 {!isSidebarCollapsed && (
                   <>

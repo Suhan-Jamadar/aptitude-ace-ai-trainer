@@ -2,34 +2,34 @@
 import { useState } from "react";
 import { Topic } from "@/types";
 import { 
-  TrendingUp, 
-  Calendar,
+  Calculator,
+  Clock,
   Percent,
   BarChart2,
-  PieChart,
-  Clock,
+  DollarSign,
   ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import QuizPractice from "@/components/Quiz/QuizPractice";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TopicCardProps {
   topic: Topic;
 }
 
 const iconMap = {
-  "trending-up": <TrendingUp className="h-6 w-6" />,
-  "calendar": <Calendar className="h-6 w-6" />,
+  "calculator": <Calculator className="h-6 w-6" />,
+  "clock": <Clock className="h-6 w-6" />,
   "percent": <Percent className="h-6 w-6" />,
-  "bar-chart-2": <BarChart2 className="h-6 w-6" />,
-  "pie-chart": <PieChart className="h-6 w-6" />
+  "bar-chart": <BarChart2 className="h-6 w-6" />,
+  "dollar-sign": <DollarSign className="h-6 w-6" />
 };
 
 export const TopicCard = ({ topic }: TopicCardProps) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const progress = (topic.completedQuestions / topic.totalQuestions) * 100;
 
   const handleTopicClick = () => {
@@ -55,7 +55,7 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center">
             <div className="p-3 rounded-lg bg-custom-gold/10 text-custom-gold mr-4">
-              {iconMap[topic.icon as keyof typeof iconMap]}
+              {iconMap[topic.icon as keyof typeof iconMap] || <Calculator className="h-6 w-6" />}
             </div>
             <h3 className="text-xl font-semibold text-custom-darkBlue1">{topic.name}</h3>
           </div>
@@ -79,11 +79,11 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
         <div className="flex flex-wrap gap-2 mb-4 text-sm text-gray-600">
           <div className="flex items-center bg-gray-100 px-2 py-1 rounded-md">
             <Clock className="h-3 w-3 mr-1 text-custom-darkBlue2" />
-            <span>{topic.attempts > 0 ? `${topic.avgTime}s avg` : 'No attempts'}</span>
+            <span>{topic.attempts && topic.attempts > 0 ? `${topic.avgTime}s avg` : 'No attempts'}</span>
           </div>
           <div className="flex items-center bg-gray-100 px-2 py-1 rounded-md">
-            <span className="font-medium mr-1">{topic.attempts}</span>
-            <span>{topic.attempts === 1 ? 'attempt' : 'attempts'}</span>
+            <span className="font-medium mr-1">{topic.attempts || 0}</span>
+            <span>{(topic.attempts === 1) ? 'attempt' : 'attempts'}</span>
           </div>
         </div>
         
@@ -107,6 +107,12 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
             Explore Topic <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
+        
+        {!isAuthenticated && (
+          <p className="text-xs text-center mt-2 text-gray-500">
+            Sign in to track your progress
+          </p>
+        )}
       </div>
     </motion.div>
   );

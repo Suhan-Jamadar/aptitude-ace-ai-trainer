@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/Quiz/DailyChallenge";
@@ -8,15 +8,53 @@ import { DailyChallengeCard } from "@/components/Aptitude/DailyChallengeCard";
 import { GrandTestBanner } from "@/components/Aptitude/GrandTestBanner";
 import { mockTopics } from "@/services/mockData";
 import { Lock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { getTopics } from "@/services/questionService";
+import { Topic } from "@/types";
+import { Button } from "@/components/ui/button";
+import AuthModal from "@/components/Auth/AuthModal";
+import { toast } from "sonner";
 
 const AptitudePage = () => {
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
-  const completedTopics = mockTopics.filter(topic => topic.completedQuestions > 0).length;
-  const totalTopics = mockTopics.length;
-  const isGrandTestUnlocked = mockTopics.every(topic => 
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [topics, setTopics] = useState<Topic[]>(mockTopics);
+  const { user, isAuthenticated, refreshUserProfile } = useAuth();
+  
+  // Calculate completed topics based on user progress
+  const completedTopics = topics.filter(topic => topic.completedQuestions > 0).length;
+  const totalTopics = topics.length;
+  
+  // Grand test is unlocked if user has completed all topics with at least 70% score
+  const isGrandTestUnlocked = topics.every(topic => 
     topic.isUnlocked && (topic.score >= 70 || topic.score === 0)
   );
   
+  // Fetch user-specific topics data
+  useEffect(() => {
+    const fetchUserTopics = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const fetchedTopics = await getTopics();
+          if (fetchedTopics && fetchedTopics.length > 0) {
+            setTopics(fetchedTopics);
+          }
+        } catch (error) {
+          console.error("Failed to fetch topics:", error);
+        }
+      }
+    };
+    
+    fetchUserTopics();
+  }, [isAuthenticated, user]);
+  
+  // Handle auth modal authentication success
+  const handleAuthenticated = async () => {
+    setShowAuthModal(false);
+    await refreshUserProfile();
+    toast.success("Successfully signed in! Your progress is now being tracked.");
+  };
+
   return (
     <MainLayout showSidebar={true}>
       <motion.div 
@@ -29,10 +67,26 @@ const AptitudePage = () => {
           <h1 className="text-3xl font-bold text-custom-darkBlue1 mb-2">Aptitude Training</h1>
           <p className="text-gray-600">
             Master each topic to unlock the Grand Test and track your progress.
+            {!isAuthenticated && (
+              <Button 
+                variant="link" 
+                className="text-custom-gold p-0 ml-1" 
+                onClick={() => setShowAuthModal(true)}
+              >
+                Sign in to save your progress
+              </Button>
+            )}
           </p>
         </div>
         
-        <DailyChallengeCard onStartChallenge={() => setShowDailyChallenge(true)} />
+        <DailyChallengeCard onStartChallenge={() => {
+          if (!isAuthenticated) {
+            toast.info("Sign in to save your daily challenge results");
+            setShowAuthModal(true);
+          } else {
+            setShowDailyChallenge(true);
+          }
+        }} />
         
         {/* Grand Test Banner */}
         <div className="mb-8">
@@ -58,11 +112,20 @@ const AptitudePage = () => {
           )}
         </div>
         
-        <TopicList topics={mockTopics} />
+        <TopicList topics={topics} />
       </motion.div>
 
       {showDailyChallenge && (
         <DailyChallenge onClose={() => setShowDailyChallenge(false)} />
+      )}
+      
+      {/* Auth modal for sign-in/signup */}
+      {showAuthModal && (
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthenticated={handleAuthenticated}
+        />
       )}
     </MainLayout>
   );

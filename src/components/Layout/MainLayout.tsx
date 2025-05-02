@@ -1,46 +1,40 @@
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import { Topic } from "@/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { getTopics } from "@/services/questionService";
+import { toast } from "sonner";
 
 interface MainLayoutProps {
   children: ReactNode;
   showSidebar?: boolean;
 }
 
-const mockTopics: Topic[] = [
+// Default topics with correct icons for the 6 required categories
+const defaultTopics: Topic[] = [
   {
     id: "1",
-    name: "Number Series",
-    description: "Identify patterns and predict the next number in a sequence",
-    icon: "trending-up",
+    name: "Quantitative Aptitude",
+    description: "Master mathematical concepts and numerical reasoning",
+    icon: "calculator",
     totalQuestions: 20,
-    completedQuestions: 15,
-    score: 80,
+    completedQuestions: 0,
+    score: 0,
     isUnlocked: true,
     subtopics: [
       {
         id: "1-1",
-        name: "Prime Series",
-        link: "https://www.geeksforgeeks.org/prime-numbers/"
+        name: "Number Systems",
+        link: "https://www.geeksforgeeks.org/number-system/"
       },
       {
         id: "1-2",
-        name: "Square and Cube Series",
-        link: "https://www.geeksforgeeks.org/square-and-cube-series/"
-      },
-      {
-        id: "1-3",
-        name: "Fibonacci Series",
-        link: "https://www.geeksforgeeks.org/fibonacci-series/"
-      },
-      {
-        id: "1-4",
-        name: "Arithmetic Series",
-        link: "https://www.geeksforgeeks.org/arithmetic-progression/"
+        name: "Arithmetic Operations",
+        link: "https://www.geeksforgeeks.org/arithmetic-operations/"
       }
     ]
   },
@@ -50,8 +44,8 @@ const mockTopics: Topic[] = [
     description: "Calculate work efficiency and time required for tasks",
     icon: "clock",
     totalQuestions: 20,
-    completedQuestions: 10,
-    score: 75,
+    completedQuestions: 0,
+    score: 0,
     isUnlocked: true,
     subtopics: [
       {
@@ -63,56 +57,36 @@ const mockTopics: Topic[] = [
         id: "2-2",
         name: "Efficiency Problems",
         link: "https://www.geeksforgeeks.org/efficiency-problems/"
-      },
-      {
-        id: "2-3",
-        name: "Time Reduction Problems",
-        link: "https://www.geeksforgeeks.org/time-reduction-problems/"
-      },
-      {
-        id: "2-4",
-        name: "Pipes and Cisterns",
-        link: "https://www.geeksforgeeks.org/pipes-and-cisterns/"
       }
     ]
   },
   {
     id: "3",
-    name: "Percentages",
-    description: "Master percentage calculations and applications",
-    icon: "percent",
+    name: "Time, Speed & Distance",
+    description: "Solve problems related to time, speed and distance calculations",
+    icon: "clock",
     totalQuestions: 20,
-    completedQuestions: 5,
-    score: 60,
+    completedQuestions: 0,
+    score: 0,
     isUnlocked: true,
     subtopics: [
       {
         id: "3-1",
-        name: "Basic Percentage Concepts",
-        link: "https://www.geeksforgeeks.org/percentages-basic-concepts/"
+        name: "Speed Concepts",
+        link: "https://www.geeksforgeeks.org/speed-concepts/"
       },
       {
         id: "3-2",
-        name: "Percentage Change",
-        link: "https://www.geeksforgeeks.org/percentage-change/"
-      },
-      {
-        id: "3-3",
-        name: "Successive Percentages",
-        link: "https://www.geeksforgeeks.org/successive-percentage/"
-      },
-      {
-        id: "3-4",
-        name: "Mixed Percentages",
-        link: "https://www.geeksforgeeks.org/mixed-percentage-problems/"
+        name: "Relative Speed",
+        link: "https://www.geeksforgeeks.org/relative-speed/"
       }
     ]
   },
   {
     id: "4",
-    name: "Profit & Loss",
-    description: "Calculate profit, loss, and percentages in business scenarios",
-    icon: "trending-up",
+    name: "Percentages",
+    description: "Master percentage calculations and applications",
+    icon: "percent",
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
@@ -120,31 +94,21 @@ const mockTopics: Topic[] = [
     subtopics: [
       {
         id: "4-1",
-        name: "Basic Concepts",
-        link: "https://www.geeksforgeeks.org/profit-and-loss-basics/"
+        name: "Basic Percentage Concepts",
+        link: "https://www.geeksforgeeks.org/percentages-basic-concepts/"
       },
       {
         id: "4-2",
-        name: "Marked Price & Discount",
-        link: "https://www.geeksforgeeks.org/marked-price-and-discount/"
-      },
-      {
-        id: "4-3",
-        name: "Successive Transactions",
-        link: "https://www.geeksforgeeks.org/successive-transactions/"
-      },
-      {
-        id: "4-4",
-        name: "Partnership Problems",
-        link: "https://www.geeksforgeeks.org/partnership-problems/"
+        name: "Percentage Change",
+        link: "https://www.geeksforgeeks.org/percentage-change/"
       }
     ]
   },
   {
     id: "5",
-    name: "Ratio & Proportion",
-    description: "Understand and solve problems based on ratios and proportions",
-    icon: "bar-chart-2",
+    name: "Profit & Loss",
+    description: "Calculate profit, loss, and percentages in business scenarios",
+    icon: "dollar-sign",
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
@@ -152,23 +116,13 @@ const mockTopics: Topic[] = [
     subtopics: [
       {
         id: "5-1",
-        name: "Basic Ratio Concepts",
-        link: "https://www.geeksforgeeks.org/ratio-basics/"
+        name: "Basic Concepts",
+        link: "https://www.geeksforgeeks.org/profit-and-loss-basics/"
       },
       {
         id: "5-2",
-        name: "Direct Proportion",
-        link: "https://www.geeksforgeeks.org/direct-proportion/"
-      },
-      {
-        id: "5-3",
-        name: "Inverse Proportion",
-        link: "https://www.geeksforgeeks.org/inverse-proportion/"
-      },
-      {
-        id: "5-4",
-        name: "Compound Proportion",
-        link: "https://www.geeksforgeeks.org/compound-proportion/"
+        name: "Marked Price & Discount",
+        link: "https://www.geeksforgeeks.org/marked-price-and-discount/"
       }
     ]
   },
@@ -176,7 +130,7 @@ const mockTopics: Topic[] = [
     id: "6",
     name: "Data Interpretation",
     description: "Analyze and interpret data from charts, graphs and tables",
-    icon: "bar-chart-2",
+    icon: "bar-chart",
     totalQuestions: 20,
     completedQuestions: 0,
     score: 0,
@@ -191,31 +145,45 @@ const mockTopics: Topic[] = [
         id: "6-2",
         name: "Bar Graphs",
         link: "https://www.geeksforgeeks.org/data-interpretation-bar-graphs/"
-      },
-      {
-        id: "6-3",
-        name: "Line Charts",
-        link: "https://www.geeksforgeeks.org/data-interpretation-line-charts/"
-      },
-      {
-        id: "6-4",
-        name: "Pie Charts",
-        link: "https://www.geeksforgeeks.org/data-interpretation-pie-charts/"
       }
     ]
   }
 ];
 
-// Mock user progress with updated total topics
-const mockUserProgress = {
-  streak: 3,
-  topicsCompleted: 2,
-  totalTopics: 6, // Updated to include Data Interpretation
-  username: "John Doe"
-};
-
 const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [topics, setTopics] = useState<Topic[]>(defaultTopics);
+  const { user, isAuthenticated } = useAuth();
+  
+  // Update mock user progress with the correct number of topics
+  const userProgress = {
+    streak: user?.streak || 0,
+    topicsCompleted: topics.filter(topic => topic.completedQuestions > 0).length,
+    totalTopics: topics.length,
+    username: user?.name || "Guest"
+  };
+
+  // Fetch user-specific topic data when authenticated
+  useEffect(() => {
+    const fetchUserTopics = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const userTopics = await getTopics();
+          if (userTopics && userTopics.length > 0) {
+            setTopics(userTopics);
+          }
+        } catch (error) {
+          console.error("Failed to fetch user topics:", error);
+          toast.error("Failed to load your progress data");
+        }
+      } else {
+        // Reset to default topics for non-authenticated users
+        setTopics(defaultTopics);
+      }
+    };
+
+    fetchUserTopics();
+  }, [isAuthenticated, user]);
 
   return (
     <div className="min-h-screen flex flex-col bg-custom-lightGray">
@@ -223,8 +191,8 @@ const MainLayout = ({ children, showSidebar = false }: MainLayoutProps) => {
       <div className="flex flex-1">
         {showSidebar && (
           <Sidebar 
-            topics={mockTopics} 
-            userProgress={mockUserProgress} 
+            topics={topics} 
+            userProgress={userProgress} 
             isSidebarCollapsed={isSidebarCollapsed}
             onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
