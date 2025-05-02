@@ -4,7 +4,10 @@ import { Question, Topic } from "@/types";
 // API base URL that will come from environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-// Helper function to handle API requests with authentication
+/**
+ * Helper function to handle API requests with authentication
+ * Automatically includes auth token and handles error responses
+ */
 const apiRequest = async (endpoint: string, options = {}) => {
   const token = localStorage.getItem('token');
   
@@ -22,7 +25,7 @@ const apiRequest = async (endpoint: string, options = {}) => {
   });
   
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
     throw new Error(errorData.message || 'API request failed');
   }
   
@@ -31,6 +34,7 @@ const apiRequest = async (endpoint: string, options = {}) => {
 
 /**
  * Get all available topics
+ * @returns {Promise<Topic[]>} Array of topic objects
  */
 export const getTopics = async (): Promise<Topic[]> => {
   try {
@@ -43,6 +47,8 @@ export const getTopics = async (): Promise<Topic[]> => {
 
 /**
  * Get questions for a specific topic
+ * @param {string} topicId - The topic identifier
+ * @returns {Promise<Question[]>} Array of question objects for the topic
  */
 export const getQuestionsByTopic = async (topicId: string): Promise<Question[]> => {
   try {
@@ -55,6 +61,7 @@ export const getQuestionsByTopic = async (topicId: string): Promise<Question[]> 
 
 /**
  * Get daily challenge questions
+ * @returns {Promise<Question[]>} Array of daily challenge questions
  */
 export const getDailyChallenge = async (): Promise<Question[]> => {
   try {
@@ -67,6 +74,7 @@ export const getDailyChallenge = async (): Promise<Question[]> => {
 
 /**
  * Get grand test questions
+ * @returns {Promise<Question[]>} Array of grand test questions
  */
 export const getGrandTestQuestions = async (): Promise<Question[]> => {
   try {
@@ -78,7 +86,14 @@ export const getGrandTestQuestions = async (): Promise<Question[]> => {
 };
 
 /**
- * Submit quiz results
+ * Submit quiz results for a user
+ * @param {string} userId - The user identifier
+ * @param {string} topicId - The topic identifier
+ * @param {number} score - The score percentage (0-100)
+ * @param {number} timeSpent - Time spent in seconds
+ * @param {number} questionsAttempted - Number of questions attempted
+ * @param {number} correctAnswers - Number of correct answers
+ * @returns {Promise<void>}
  */
 export const submitQuizResult = async (
   userId: string,
@@ -96,11 +111,15 @@ export const submitQuizResult = async (
         topicId,
         score,
         timeSpent,
-        date: new Date(),
+        date: new Date().toISOString(),
         questionsAttempted,
-        correctAnswers
+        correctAnswers,
+        performance: JSON.parse(localStorage.getItem(`${topicId}_lastPerformance`) || '{}')
       }),
     });
+    
+    // Also update user's topic progress
+    await updateTopicProgress(userId, topicId, questionsAttempted, score);
   } catch (error) {
     console.error('Submit quiz result error:', error);
     throw error;
@@ -109,6 +128,11 @@ export const submitQuizResult = async (
 
 /**
  * Update user's progress for a specific topic
+ * @param {string} userId - The user identifier
+ * @param {string} topicId - The topic identifier
+ * @param {number} questionsAttempted - Number of questions attempted
+ * @param {number} score - The score percentage (0-100)
+ * @returns {Promise<void>}
  */
 export const updateTopicProgress = async (
   userId: string,
@@ -121,7 +145,8 @@ export const updateTopicProgress = async (
       method: 'PUT',
       body: JSON.stringify({
         questionsAttempted,
-        score
+        score,
+        lastAttemptDate: new Date().toISOString()
       }),
     });
   } catch (error) {
@@ -132,6 +157,11 @@ export const updateTopicProgress = async (
 
 /**
  * Get recommendations based on user performance
+ * @param {string} topicId - The topic identifier
+ * @param {number} timeSpent - Time spent in seconds
+ * @param {number} attempts - Number of attempts
+ * @param {number} score - The score percentage (0-100)
+ * @returns {Promise<string>} Recommendation text
  */
 export const getRecommendations = async (
   topicId: string,
@@ -146,12 +176,28 @@ export const getRecommendations = async (
         topicId,
         timeSpent,
         attempts,
-        score
+        score,
+        userId: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).id : null
       }),
     });
     return response.recommendation;
   } catch (error) {
     console.error('Get recommendations error:', error);
+    return "Practice more questions on topics you find challenging.";
+  }
+};
+
+/**
+ * Get user's quiz history for a topic
+ * @param {string} userId - The user identifier
+ * @param {string} topicId - The topic identifier
+ * @returns {Promise<any[]>} Array of quiz attempt data
+ */
+export const getQuizHistory = async (userId: string, topicId: string): Promise<any[]> => {
+  try {
+    return await apiRequest(`/users/${userId}/topics/${topicId}/history`);
+  } catch (error) {
+    console.error('Get quiz history error:', error);
     throw error;
   }
 };

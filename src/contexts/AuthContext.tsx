@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User } from '@/types';
 import * as authService from '@/services/authService';
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,13 +19,69 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  
+  // Check token validity and auto-refresh on expiration
   useEffect(() => {
-    // Check if user is logged in on initial load
+    const checkTokenValidity = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        // Get the stored user and check if token is valid by fetching profile
+        await refreshUserProfile();
+      } catch (error) {
+        // Token is invalid, attempt to refresh it
+        console.error("Token validation error:", error);
+        const refreshed = await authService.refreshToken();
+        
+        if (!refreshed) {
+          // If refresh failed, clear user data
+          setUser(null);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkTokenValidity();
+    
+    // Set up periodic check every hour
+    const tokenCheckInterval = setInterval(() => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        authService.refreshToken();
+      }
+    }, 60 * 60 * 1000); // 1 hour
+    
+    return () => clearInterval(tokenCheckInterval);
+  }, []);
+  
+  // Check if user is logged in on initial load
+  useEffect(() => {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
-    setIsLoading(false);
   }, []);
+
+  const refreshUserProfile = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      setIsLoading(true);
+      const userData = await authService.getUserProfile();
+      setUser(userData);
+      authService.setCurrentUser(userData);
+    } catch (error) {
+      console.error("Get profile error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -58,8 +116,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.logout();
       setUser(null);
+      toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
+      toast.error("Logout failed");
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +133,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading, 
         login, 
         signup, 
-        logout 
+        logout,
+        refreshUserProfile
       }}
     >
       {children}
