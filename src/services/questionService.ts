@@ -128,23 +128,26 @@ export const submitQuizResult = async (
  * Update user's progress for a specific topic
  * @param {string} userId - The user identifier
  * @param {string} topicId - The topic identifier
- * @param {number} questionsAttempted - Number of questions attempted
+ * @param {number} completedQuestions - Number of completed questions (correct answers)
+ * @param {number} totalQuestions - Total number of questions
  * @param {number} score - The score percentage (0-100)
  * @returns {Promise<void>}
  */
 export const updateTopicProgress = async (
   userId: string,
   topicId: string,
-  questionsAttempted: number,
+  completedQuestions: number,
+  totalQuestions: number,
   score: number
 ): Promise<void> => {
   try {
     await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
       method: 'PUT',
       body: JSON.stringify({
-        questionsAttempted,
+        completedQuestions,
+        totalQuestions,
         score,
-        lastAttemptDate: new Date().toISOString()
+        lastUpdated: new Date().toISOString()
       }),
     });
   } catch (error) {

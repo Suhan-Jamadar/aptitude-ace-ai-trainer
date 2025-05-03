@@ -31,9 +31,13 @@ const AptitudePage = () => {
   const totalTopics = uniqueTopics.length;
   
   // Grand test is unlocked if user has completed all topics with at least 70% score
-  const isGrandTestUnlocked = uniqueTopics.every(topic => 
-    topic.isUnlocked && (topic.score >= 70 || topic.score === 0)
-  );
+  const isGrandTestUnlocked = uniqueTopics.every(topic => {
+    // Topic must be unlocked AND have a score of at least 70%
+    // AND must have completed questions (progress > 0)
+    return topic.isUnlocked && 
+           topic.score >= 70 && 
+           topic.completedQuestions > 0;
+  });
   
   // Fetch user-specific topics data
   useEffect(() => {
