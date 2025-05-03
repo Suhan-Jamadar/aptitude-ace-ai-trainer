@@ -6,7 +6,7 @@ import DailyChallenge from "@/components/Quiz/DailyChallenge";
 import { TopicList } from "@/components/Aptitude/TopicList";
 import { DailyChallengeCard } from "@/components/Aptitude/DailyChallengeCard";
 import { GrandTestBanner } from "@/components/Aptitude/GrandTestBanner";
-import { mockTopics } from "@/services/mockData";
+import { defaultTopics } from "@/data/defaultTopics";
 import { Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTopics } from "@/services/questionService";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 const AptitudePage = () => {
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [topics, setTopics] = useState<Topic[]>(mockTopics);
+  const [topics, setTopics] = useState<Topic[]>(defaultTopics);
   const { user, isAuthenticated, refreshUserProfile } = useAuth();
   
   // Filter out any duplicates based on the topic id
