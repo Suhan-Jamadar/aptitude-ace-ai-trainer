@@ -1,16 +1,37 @@
+
 import { Flashcard } from "@/types";
 
 // API base URL that will come from environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-const handleResponse = async (response: Response) => {
+// Helper function to handle API requests with authentication
+const apiRequest = async (endpoint: string, options = {}) => {
+  const token = localStorage.getItem('token');
+  
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+    credentials: 'include' as RequestCredentials,
+  };
+  
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...defaultOptions,
+    ...options,
+  });
+  
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'API request failed');
+    const errorData = await response.json().catch(() => ({ message: 'API request failed' }));
+    throw new Error(errorData.message || 'API request failed');
   }
+  
   return response.json();
 };
 
+/**
+ * Upload and generate a flashcard from a file
+ */
 export const uploadAndGenerateFlashcard = async (
   userId: string,
   file: File,
@@ -31,53 +52,33 @@ export const uploadAndGenerateFlashcard = async (
       credentials: 'include',
     });
 
-    return handleResponse(response);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Generate flashcard failed' }));
+      throw new Error(errorData.message || 'Generate flashcard failed');
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('Generate flashcard error:', error);
     throw error;
   }
 };
 
+/**
+ * Get all flashcards for a user
+ */
 export const getFlashcards = async (userId: string): Promise<Flashcard[]> => {
   try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/flashcards`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-      },
-      credentials: 'include',
-    });
-
-    return handleResponse(response);
+    const result = await apiRequest(`/users/${userId}/flashcards`);
+    // Convert string dates to Date objects
+    return result.map((card: any) => ({
+      ...card,
+      dateCreated: new Date(card.dateCreated)
+    }));
   } catch (error) {
     console.error('Get flashcards error:', error);
     throw error;
   }
-};
-
-// Helper function to handle API requests with authentication
-const apiRequest = async (endpoint: string, options = {}) => {
-  const token = localStorage.getItem('token');
-  
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-    },
-    credentials: 'include' as RequestCredentials,
-  };
-  
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...defaultOptions,
-    ...options,
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'API request failed');
-  }
-  
-  return response.json();
 };
 
 /**
@@ -89,15 +90,18 @@ export const createFlashcard = async (
   content: string
 ): Promise<Flashcard> => {
   try {
-    return await apiRequest(`/users/${userId}/flashcards`, {
+    const result = await apiRequest(`/users/${userId}/flashcards`, {
       method: 'POST',
       body: JSON.stringify({
         title,
         content,
-        dateCreated: new Date(),
-        isRead: false
       }),
     });
+    
+    return {
+      ...result,
+      dateCreated: new Date(result.dateCreated)
+    };
   } catch (error) {
     console.error('Create flashcard error:', error);
     throw error;
@@ -143,37 +147,29 @@ export const deleteFlashcard = async (
 };
 
 /**
- * Upload a document to be converted to flashcards
+ * Update flashcard content
  */
-export const uploadDocument = async (
+export const updateFlashcardContent = async (
   userId: string,
-  file: File,
-  title: string
+  flashcardId: string,
+  content: string,
+  title?: string
 ): Promise<Flashcard> => {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('title', title);
+    const updateData: Record<string, string> = { content };
+    if (title) updateData.title = title;
     
-    const token = localStorage.getItem('token');
-    
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/documents`, {
-      method: 'POST',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-      },
-      body: formData,
-      credentials: 'include',
+    const result = await apiRequest(`/users/${userId}/flashcards/${flashcardId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updateData),
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Upload failed');
-    }
-    
-    return await response.json();
+    return {
+      ...result,
+      dateCreated: new Date(result.dateCreated)
+    };
   } catch (error) {
-    console.error('Upload document error:', error);
+    console.error('Update flashcard content error:', error);
     throw error;
   }
 };

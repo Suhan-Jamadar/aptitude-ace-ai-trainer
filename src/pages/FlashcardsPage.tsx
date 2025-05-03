@@ -1,55 +1,79 @@
-import { useState, useRef } from "react";
+
+import { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Flashcard } from "@/types";
-import { Upload, File, FileText, Check, Calendar, Filter, ArrowUpDown, Search } from "lucide-react";
+import { Upload, File, FileText, Check, Calendar, Filter, ArrowUpDown, Search, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { isValidFile } from "@/utils/fileUtils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { uploadAndGenerateFlashcard } from "@/services/flashcardService";
-
-const mockFlashcards: Flashcard[] = [
-  {
-    id: "1",
-    title: "Keys in DBMS",
-    content: "Primary keys uniquely identify records in a table. Foreign keys establish relationships between tables. Candidate keys are potential primary keys. Super keys uniquely identify records but may include extra attributes. Composite keys use multiple attributes together.",
-    dateCreated: new Date(2023, 3, 15),
-    isRead: true
-  },
-  {
-    id: "2",
-    title: "Binary Search Algorithm",
-    content: "Binary search is a fast search algorithm that works on sorted arrays. It repeatedly divides the search space in half, comparing the middle element to the target value. Time complexity is O(log n), making it very efficient for large datasets.",
-    dateCreated: new Date(2023, 4, 2),
-    isRead: false
-  },
-  {
-    id: "3",
-    title: "Big O Notation",
-    content: "Big O notation describes the performance or complexity of an algorithm. O(1) represents constant time. O(n) represents linear time. O(log n) represents logarithmic time. O(n²) represents quadratic time. It focuses on the worst-case scenario as input size grows.",
-    dateCreated: new Date(2023, 4, 10),
-    isRead: false
-  }
-];
+import { 
+  getFlashcards,
+  uploadAndGenerateFlashcard, 
+  createFlashcard,
+  updateFlashcardStatus,
+  deleteFlashcard
+} from "@/services/flashcardService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const FlashcardsPage = () => {
-  const [flashcards, setFlashcards] = useState<Flashcard[]>(mockFlashcards);
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [newFlashcardTitle, setNewFlashcardTitle] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [sortByDateAsc, setSortByDateAsc] = useState(true);
   const [filterReadOnly, setFilterReadOnly] = useState(false);
   const [selectedFlashcard, setSelectedFlashcard] = useState<Flashcard | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, isAuthenticated } = useAuth();
 
-  const handleCheckFlashcard = (id: string) => {
-    setFlashcards(flashcards.map(card => 
-      card.id === id ? { ...card, isRead: !card.isRead } : card
-    ));
+  // Fetch user's flashcards when component mounts
+  useEffect(() => {
+    const fetchUserFlashcards = async () => {
+      if (isAuthenticated && user) {
+        try {
+          setIsLoading(true);
+          const userFlashcards = await getFlashcards(user.id);
+          setFlashcards(userFlashcards);
+        } catch (error) {
+          console.error("Failed to fetch flashcards:", error);
+          toast.error("Failed to load your flashcards");
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // Use mock data when not authenticated
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserFlashcards();
+  }, [isAuthenticated, user]);
+
+  const handleCheckFlashcard = async (id: string) => {
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to save your progress");
+      return;
+    }
+
+    try {
+      const flashcard = flashcards.find(card => card.id === id);
+      if (flashcard) {
+        await updateFlashcardStatus(user.id, id, !flashcard.isRead);
+        setFlashcards(flashcards.map(card => 
+          card.id === id ? { ...card, isRead: !card.isRead } : card
+        ));
+        toast.success(flashcard.isRead ? "Marked as unread" : "Marked as read");
+      }
+    } catch (error) {
+      console.error("Failed to update flashcard status:", error);
+      toast.error("Failed to update flashcard status");
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -79,6 +103,11 @@ const FlashcardsPage = () => {
   };
 
   const processFile = async (file: File) => {
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to create flashcards");
+      return;
+    }
+    
     const validation = isValidFile(file);
     
     if (!validation.valid) {
@@ -95,7 +124,7 @@ const FlashcardsPage = () => {
 
     try {
       const newFlashcard = await uploadAndGenerateFlashcard(
-        "user123", // Replace with actual user ID from auth context
+        user.id,
         file,
         newFlashcardTitle
       );
@@ -114,6 +143,50 @@ const FlashcardsPage = () => {
     }
   };
 
+  const handleCreateManualFlashcard = async () => {
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to create flashcards");
+      return;
+    }
+    
+    if (!newFlashcardTitle) {
+      toast.error("Please provide a title for your flashcard");
+      return;
+    }
+    
+    try {
+      const newFlashcard = await createFlashcard(
+        user.id, 
+        newFlashcardTitle, 
+        "Click to edit your flashcard content"
+      );
+      
+      setFlashcards([...flashcards, newFlashcard]);
+      setNewFlashcardTitle("");
+      toast.success("Flashcard created successfully!");
+    } catch (error) {
+      toast.error("Failed to create flashcard");
+    }
+  };
+
+  const handleDeleteFlashcard = async (id: string) => {
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to delete flashcards");
+      return;
+    }
+    
+    try {
+      await deleteFlashcard(user.id, id);
+      setFlashcards(flashcards.filter(card => card.id !== id));
+      if (selectedFlashcard?.id === id) {
+        setSelectedFlashcard(null);
+      }
+      toast.success("Flashcard deleted");
+    } catch (error) {
+      toast.error("Failed to delete flashcard");
+    }
+  };
+
   const handleBrowseFiles = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -121,6 +194,10 @@ const FlashcardsPage = () => {
   };
 
   const formatDate = (date: Date) => {
+    if (!(date instanceof Date) && typeof date === 'string') {
+      date = new Date(date);
+    }
+    
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'short', 
@@ -132,7 +209,9 @@ const FlashcardsPage = () => {
     setSortByDateAsc(!sortByDateAsc);
     
     const sorted = [...flashcards].sort((a, b) => {
-      const comparison = a.dateCreated.getTime() - b.dateCreated.getTime();
+      const dateA = a.dateCreated instanceof Date ? a.dateCreated : new Date(a.dateCreated);
+      const dateB = b.dateCreated instanceof Date ? b.dateCreated : new Date(b.dateCreated);
+      const comparison = dateA.getTime() - dateB.getTime();
       return sortByDateAsc ? comparison : -comparison;
     });
     
@@ -149,11 +228,13 @@ const FlashcardsPage = () => {
     setSelectedFlashcard(flashcard);
   };
 
-  const displayedFlashcards = filterReadOnly 
+  // Filter flashcards based on read status
+  const readFilteredFlashcards = filterReadOnly 
     ? flashcards.filter(card => card.isRead) 
     : flashcards;
 
-  const filteredFlashcards = flashcards.filter(card => 
+  // Apply search filter on top of read filter
+  const displayedFlashcards = readFilteredFlashcards.filter(card => 
     card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     card.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -170,6 +251,11 @@ const FlashcardsPage = () => {
           <h1 className="text-3xl font-bold text-custom-darkBlue1 mb-2">Flashcards</h1>
           <p className="text-gray-600">
             Upload your notes and generate AI-powered flashcards for effective learning.
+            {!isAuthenticated && (
+              <span className="ml-1 text-custom-gold">
+                Sign in to save your flashcards.
+              </span>
+            )}
           </p>
         </div>
 
@@ -217,13 +303,25 @@ const FlashcardsPage = () => {
                   className="hidden"
                   accept=".pdf,.doc,.docx,.txt"
                 />
-                <Button 
-                  className="bg-custom-darkBlue1 hover:bg-custom-darkBlue2 text-white w-full"
-                  onClick={handleBrowseFiles}
-                >
-                  <File className="h-4 w-4 mr-2" />
-                  Browse Files
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    className="bg-custom-darkBlue1 hover:bg-custom-darkBlue2 text-white flex-1"
+                    onClick={handleBrowseFiles}
+                    disabled={!isAuthenticated}
+                  >
+                    <File className="h-4 w-4 mr-2" />
+                    Browse Files
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-custom-darkBlue1 text-custom-darkBlue1 flex-1"
+                    onClick={handleCreateManualFlashcard}
+                    disabled={!isAuthenticated}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Blank
+                  </Button>
+                </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">
                 Supported formats: PDF, DOC, DOCX, TXT (Max size: 10MB)
@@ -266,12 +364,28 @@ const FlashcardsPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredFlashcards.length === 0 ? (
+            {isLoading ? (
+              // Loading state
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+                  <div className="h-5 bg-gray-200 rounded mb-4 w-3/4"></div>
+                  <div className="h-20 bg-gray-100 rounded mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))
+            ) : displayedFlashcards.length === 0 ? (
+              // Empty state
               <div className="col-span-full text-center py-10 bg-gray-50 rounded-lg">
-                <p className="text-gray-500">No flashcards found.</p>
+                <FileText className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                <p className="text-gray-500">
+                  {isAuthenticated 
+                    ? "No flashcards found. Create your first flashcard above!"
+                    : "Sign in to create and view your flashcards."}
+                </p>
               </div>
             ) : (
-              filteredFlashcards.map((flashcard) => (
+              // Flashcards grid
+              displayedFlashcards.map((flashcard) => (
                 <motion.div 
                   key={flashcard.id} 
                   className={`
@@ -280,7 +394,7 @@ const FlashcardsPage = () => {
                   `}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: Number(flashcard.id) * 0.1 }}
+                  transition={{ duration: 0.3 }}
                   whileHover={{ y: -5 }}
                 >
                   <div className="p-6">
@@ -343,7 +457,16 @@ const FlashcardsPage = () => {
                 <Calendar className="h-4 w-4 mr-1" />
                 <span>Created on {formatDate(selectedFlashcard.dateCreated)}</span>
               </div>
-              <div className="flex justify-end mt-6">
+              <div className="flex justify-between mt-6">
+                <Button 
+                  variant="outline" 
+                  className="border-red-500 text-red-500 hover:bg-red-50"
+                  onClick={() => {
+                    handleDeleteFlashcard(selectedFlashcard.id);
+                  }}
+                >
+                  Delete Flashcard
+                </Button>
                 <Button 
                   className="bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90"
                   onClick={() => {
