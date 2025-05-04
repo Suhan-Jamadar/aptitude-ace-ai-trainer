@@ -19,14 +19,6 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  joinDate: {
-    type: Date,
-    default: Date.now
-  },
-  lastActive: {
-    type: Date,
-    default: Date.now
-  },
   progress: {
     topicsCompleted: {
       type: Number,
