@@ -16,17 +16,24 @@ const apiRequest = async (endpoint: string, options = {}) => {
     credentials: 'include' as RequestCredentials,
   };
   
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...defaultOptions,
-    ...options,
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'API request failed');
+  try {
+    console.log(`Progress API Request to: ${API_BASE_URL}${endpoint}`);
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...defaultOptions,
+      ...options,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`Progress API Error (${response.status}):`, errorData);
+      throw new Error(errorData.message || 'API request failed');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error(`Progress API Request failed for ${endpoint}:`, error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 /**
@@ -34,6 +41,7 @@ const apiRequest = async (endpoint: string, options = {}) => {
  */
 export const getUserProgress = async (userId: string): Promise<Progress> => {
   try {
+    console.log(`Fetching progress for user ${userId}`);
     return await apiRequest(`/users/${userId}/progress`);
   } catch (error) {
     console.error('Get user progress error:', error);
@@ -49,12 +57,14 @@ export const updateUserStreak = async (
   newStreak: number
 ): Promise<void> => {
   try {
+    console.log(`Updating streak for user ${userId} to ${newStreak}`);
     await apiRequest(`/users/${userId}/streak`, {
       method: 'PATCH',
       body: JSON.stringify({
         streak: newStreak
       }),
     });
+    console.log('Streak updated successfully');
   } catch (error) {
     console.error('Update user streak error:', error);
     throw error;
@@ -72,6 +82,9 @@ export const updateTopicProgress = async (
   score: number
 ): Promise<void> => {
   try {
+    console.log(`Updating topic progress for user ${userId}, topic ${topicId}`);
+    console.log(`Progress data: ${completedQuestions}/${totalQuestions}, score: ${score}`);
+    
     await apiRequest(`/users/${userId}/topics/${topicId}/progress`, {
       method: 'PUT',
       body: JSON.stringify({
@@ -81,6 +94,8 @@ export const updateTopicProgress = async (
         lastUpdated: new Date().toISOString()
       }),
     });
+    
+    console.log('Topic progress updated successfully');
   } catch (error) {
     console.error('Update topic progress error:', error);
     throw error;

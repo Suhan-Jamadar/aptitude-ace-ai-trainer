@@ -47,12 +47,14 @@ export const useQuizResults = ({
   // Record quiz results to backend and local storage
   useEffect(() => {
     const recordQuizResults = async () => {
-      if (!isCompleted) return;
+      if (!isCompleted || questions.length === 0) return;
       
+      console.log(`Recording quiz results for topic ${topicId}`);
       setIsSubmitting(true);
       
       // Calculate final score
       const finalScore = Math.round((score / questions.length) * 100);
+      console.log(`Quiz completed with score: ${finalScore}%, correct answers: ${score}/${questions.length}`);
       
       // Save to local storage and get updated stats
       const { newAttempts, newAvgTime } = saveLocalResults(
@@ -67,6 +69,7 @@ export const useQuizResults = ({
       // If user is authenticated, save to backend
       if (userId) {
         try {
+          console.log(`Submitting quiz result to backend for user ${userId}`);
           // Submit quiz result
           await submitQuizResult(
             userId,
@@ -77,6 +80,7 @@ export const useQuizResults = ({
             score
           );
           
+          console.log(`Updating topic progress for user ${userId}`);
           // Update topic progress
           await updateTopicProgress(
             userId,
@@ -87,6 +91,7 @@ export const useQuizResults = ({
           );
           
           // Refresh user profile to update UI
+          console.log('Refreshing user profile after quiz submission');
           await refreshUserProfile();
           
           toast.success("Quiz results saved successfully!");
@@ -94,6 +99,7 @@ export const useQuizResults = ({
           console.error("Error saving quiz results:", error);
           
           // Store in pending submissions queue for later retry
+          console.log('Queueing quiz result for later submission');
           queuePendingSubmission({
             userId,
             topicId,
@@ -105,6 +111,8 @@ export const useQuizResults = ({
             performance
           });
         }
+      } else {
+        console.log('User not authenticated, quiz results saved only locally');
       }
       
       setIsSubmitting(false);
@@ -113,7 +121,7 @@ export const useQuizResults = ({
     if (isCompleted && questions.length > 0) {
       recordQuizResults();
     }
-  }, [isCompleted, questions, topicId, userId, score, timeSpent, performance, streak, setIsSubmitting, refreshUserProfile]);
+  }, [isCompleted, questions, topicId, userId, score, timeSpent, performance, streak, setIsSubmitting, saveLocalResults, queuePendingSubmission, refreshUserProfile]);
 
   return {
     isSubmitting

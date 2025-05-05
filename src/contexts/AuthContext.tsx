@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User } from '@/types';
 import * as authService from '@/services/authService';
@@ -30,8 +29,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       try {
+        console.log('Checking token validity...');
         // Get the stored user and check if token is valid by fetching profile
         await refreshUserProfile();
+        console.log('Token is valid');
       } catch (error) {
         // Token is invalid, attempt to refresh it
         console.error("Token validation error:", error);
@@ -39,9 +40,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (!refreshed) {
           // If refresh failed, clear user data
+          console.log('Token refresh failed, logging out');
           setUser(null);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+        } else {
+          console.log('Token refreshed successfully');
         }
       } finally {
         setIsLoading(false);
@@ -63,17 +67,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Check if user is logged in on initial load
   useEffect(() => {
+    console.log('Checking for stored user data...');
     const currentUser = authService.getCurrentUser();
+    if (currentUser) {
+      console.log('Found stored user:', currentUser);
+    } else {
+      console.log('No stored user found');
+    }
     setUser(currentUser);
   }, []);
 
   const refreshUserProfile = async () => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      console.log('No token found, cannot refresh profile');
+      return;
+    }
     
     try {
       setIsLoading(true);
+      console.log('Refreshing user profile...');
       const userData = await authService.getUserProfile();
+      console.log('Profile refreshed:', userData);
       setUser(userData);
       authService.setCurrentUser(userData);
     } catch (error) {
@@ -86,11 +101,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log(`Attempting login for ${email}...`);
       const userData = await authService.login(email, password);
       setUser(userData);
       authService.setCurrentUser(userData);
+      console.log('Login successful in AuthContext');
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Login error in AuthContext:", error);
       throw error;
     } finally {
       setIsLoading(false);

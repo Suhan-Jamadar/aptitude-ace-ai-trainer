@@ -1,3 +1,4 @@
+
 import { User } from "@/types";
 
 // API base URL that will come from environment variables
@@ -7,14 +8,21 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
  * Handle API request with proper error handling
  */
 const apiRequest = async (endpoint: string, options = {}) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(errorData.message || 'API request failed');
+  try {
+    console.log(`API Request to: ${API_BASE_URL}${endpoint}`);
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      console.error(`API Error (${response.status}):`, errorData);
+      throw new Error(errorData.message || 'API request failed');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error(`API Request failed for ${endpoint}:`, error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 /**
@@ -25,6 +33,7 @@ const apiRequest = async (endpoint: string, options = {}) => {
  */
 export const login = async (email: string, password: string): Promise<User> => {
   try {
+    console.log('Login attempt for:', email);
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -36,10 +45,12 @@ export const login = async (email: string, password: string): Promise<User> => {
     
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Login failed:', errorData);
       throw new Error(errorData.message || 'Login failed');
     }
     
     const userData = await response.json();
+    console.log('Login successful:', userData);
     
     // Store the JWT token in localStorage
     if (userData.token) {
@@ -222,6 +233,7 @@ export const getUserProfile = async (): Promise<User> => {
       throw new Error('No authentication token found');
     }
 
+    console.log('Fetching user profile...');
     const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'GET',
       headers: {
@@ -231,10 +243,12 @@ export const getUserProfile = async (): Promise<User> => {
     });
 
     if (!response.ok) {
+      console.error(`Failed to fetch profile: ${response.status}`);
       throw new Error('Failed to fetch user profile');
     }
 
     const userData = await response.json();
+    console.log('User profile received:', userData);
     
     // Update stored user data with any new information
     setCurrentUser(userData.user);
