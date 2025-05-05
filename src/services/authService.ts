@@ -1,4 +1,3 @@
-
 import { User } from "@/types";
 
 // API base URL that will come from environment variables
@@ -10,10 +9,28 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 const apiRequest = async (endpoint: string, options = {}) => {
   try {
     console.log(`API Request to: ${API_BASE_URL}${endpoint}`);
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    const defaultOptions = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include' as RequestCredentials, // Important for cookies
+    };
+
+    const mergedOptions = {
+      ...defaultOptions,
+      ...options,
+      headers: {
+        ...defaultOptions.headers,
+        ...(options as any).headers,
+      },
+    };
+
+    console.log('Request options:', JSON.stringify(mergedOptions));
+    
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      const errorData = await response.json().catch(() => ({ message: `Error ${response.status}: ${response.statusText}` }));
       console.error(`API Error (${response.status}):`, errorData);
       throw new Error(errorData.message || 'API request failed');
     }
@@ -34,22 +51,11 @@ const apiRequest = async (endpoint: string, options = {}) => {
 export const login = async (email: string, password: string): Promise<User> => {
   try {
     console.log('Login attempt for:', email);
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const userData = await apiRequest('/auth/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email, password }),
-      credentials: 'include', // Important for cookies
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Login failed:', errorData);
-      throw new Error(errorData.message || 'Login failed');
-    }
-    
-    const userData = await response.json();
     console.log('Login successful:', userData);
     
     // Store the JWT token in localStorage
@@ -87,21 +93,13 @@ export const signup = async (
   password: string
 ): Promise<User> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+    console.log('Signup attempt for:', email);
+    const userData = await apiRequest('/auth/signup', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ name, email, password }),
-      credentials: 'include', // Important for cookies
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Signup failed');
-    }
-    
-    const userData = await response.json();
+    console.log('Signup successful:', userData);
     
     // Store the JWT token in localStorage
     if (userData.token) {
@@ -131,19 +129,18 @@ export const signup = async (
  */
 export const refreshToken = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
+    const token = localStorage.getItem('token');
+    if (!token) {
       return false;
     }
+
+    const data = await apiRequest('/auth/refresh-token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
     
-    const data = await response.json();
     localStorage.setItem('token', data.token);
     return true;
   } catch (error) {
@@ -158,13 +155,15 @@ export const refreshToken = async (): Promise<boolean> => {
  */
 export const logout = async (): Promise<void> => {
   try {
-    await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      credentials: 'include',
-    });
+    const token = localStorage.getItem('token');
+    if (token) {
+      await apiRequest('/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+    }
     
     // Clear local storage
     localStorage.removeItem('token');
@@ -234,20 +233,13 @@ export const getUserProfile = async (): Promise<User> => {
     }
 
     console.log('Fetching user profile...');
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    const userData = await apiRequest('/auth/profile', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
       },
-      credentials: 'include',
     });
-
-    if (!response.ok) {
-      console.error(`Failed to fetch profile: ${response.status}`);
-      throw new Error('Failed to fetch user profile');
-    }
-
-    const userData = await response.json();
+    
     console.log('User profile received:', userData);
     
     // Update stored user data with any new information
@@ -273,21 +265,13 @@ export const updateUserProfile = async (userId: string, profileData: Partial<Use
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    const userData = await apiRequest('/auth/profile', {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(profileData),
-      credentials: 'include',
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to update user profile');
-    }
-
-    const userData = await response.json();
     
     // Update stored user data with new information
     setCurrentUser(userData.user);

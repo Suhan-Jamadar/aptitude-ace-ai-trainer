@@ -11,20 +11,28 @@ const apiRequest = async (endpoint: string, options = {}) => {
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     },
     credentials: 'include' as RequestCredentials,
   };
   
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...(options as any).headers,
+    },
+  };
+
   try {
     console.log(`Progress API Request to: ${API_BASE_URL}${endpoint}`);
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...defaultOptions,
-      ...options,
-    });
+    console.log('Progress API Request options:', JSON.stringify(mergedOptions));
+    
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
     
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ message: `Error ${response.status}: ${response.statusText}` }));
       console.error(`Progress API Error (${response.status}):`, errorData);
       throw new Error(errorData.message || 'API request failed');
     }

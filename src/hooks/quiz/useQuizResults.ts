@@ -70,6 +70,11 @@ export const useQuizResults = ({
       if (userId) {
         try {
           console.log(`Submitting quiz result to backend for user ${userId}`);
+          const token = localStorage.getItem('token');
+          if (!token) {
+            throw new Error('Authentication token not found');
+          }
+          
           // Submit quiz result
           await submitQuizResult(
             userId,
@@ -110,6 +115,8 @@ export const useQuizResults = ({
             date: new Date().toISOString(),
             performance
           });
+          
+          toast.error("Failed to save results to server. They will be submitted when you're back online.");
         }
       } else {
         console.log('User not authenticated, quiz results saved only locally');

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User } from '@/types';
 import * as authService from '@/services/authService';
@@ -46,6 +47,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.removeItem('user');
         } else {
           console.log('Token refreshed successfully');
+          try {
+            await refreshUserProfile();
+          } catch (err) {
+            console.error("Unable to get user profile after token refresh:", err);
+            setUser(null);
+          }
         }
       } finally {
         setIsLoading(false);
@@ -93,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       authService.setCurrentUser(userData);
     } catch (error) {
       console.error("Get profile error:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -106,8 +114,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userData);
       authService.setCurrentUser(userData);
       console.log('Login successful in AuthContext');
+      toast.success("Login successful!");
     } catch (error) {
       console.error("Login error in AuthContext:", error);
+      toast.error(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -117,11 +127,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log(`Attempting signup for ${email}...`);
       const userData = await authService.signup(name, email, password);
       setUser(userData);
       authService.setCurrentUser(userData);
+      console.log('Signup successful in AuthContext');
+      toast.success("Account created successfully!");
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Signup error in AuthContext:", error);
+      toast.error(`Signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     } finally {
       setIsLoading(false);

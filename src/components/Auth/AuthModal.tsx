@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -31,13 +31,13 @@ const AuthModal = ({
   const handleLoginSubmit = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Call the login method from AuthContext (which will use authService)
+      console.log(`AuthModal: Attempting login for ${email}`);
       await login(email, password);
-      toast.success("Successfully logged in!");
+      console.log('AuthModal: Login successful');
       handleAuthenticated();
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Login failed. Please check your credentials.");
+      console.error("AuthModal: Login error:", error);
+      // Toast is already shown in the AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -46,13 +46,13 @@ const AuthModal = ({
   const handleSignupSubmit = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Call the signup method from AuthContext (which will use authService)
+      console.log(`AuthModal: Attempting signup for ${email}`);
       await signup(name, email, password);
-      toast.success("Account created successfully!");
+      console.log('AuthModal: Signup successful');
       handleAuthenticated();
     } catch (error) {
-      console.error("Signup error:", error);
-      toast.error("Signup failed. Please try again later.");
+      console.error("AuthModal: Signup error:", error);
+      // Toast is already shown in the AuthContext
     } finally {
       setIsLoading(false);
     }
