@@ -7,8 +7,9 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import HomePage from "./pages/HomePage";
+import ProfilePage from "./pages/ProfilePage";
 import AptitudePage from "./pages/AptitudePage";
-import TopicDetailPage from "./pages/TopicDetailPage"; // Import the new page
+import TopicDetailPage from "./pages/TopicDetailPage";
 import GrandTestPage from "./pages/GrandTestPage";
 import FlashcardsPage from "./pages/FlashcardsPage";
 import NotFound from "./pages/NotFound";
@@ -30,8 +31,9 @@ const AnimatedRoutes = () => {
       >
         <Routes location={location}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/aptitude" element={<AptitudePage />} />
-          <Route path="/aptitude/topic/:topicId" element={<TopicDetailPage />} /> {/* Add new route */}
+          <Route path="/aptitude/topic/:topicId" element={<TopicDetailPage />} />
           <Route path="/aptitude/grand-test" element={<GrandTestPage />} />
           <Route path="/flashcards" element={<FlashcardsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

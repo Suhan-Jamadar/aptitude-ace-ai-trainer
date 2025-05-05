@@ -6,11 +6,15 @@ import AptitudeFeature3D from "@/components/Home/AptitudeFeature3D";
 import HomeFeatures from "@/components/Home/HomeFeatures";
 import HomeActions from "@/components/Home/HomeActions";
 import HomeSectionCard from "@/components/Home/HomeSectionCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { UserIcon } from "lucide-react";
 
 const HomePage = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalView, setAuthModalView] = useState<"login" | "signup">("signup");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, user } = useAuth();
 
   const handleOpenAuthModal = (view: "login" | "signup") => {
     setAuthModalView(view);
@@ -18,7 +22,6 @@ const HomePage = () => {
   };
 
   const handleCloseAuthModal = () => setIsAuthModalOpen(false);
-  const handleAuthenticated = () => setIsAuthenticated(true);
 
   return (
     <MainLayout>
@@ -29,11 +32,25 @@ const HomePage = () => {
             <div className="bg-white/80 backdrop-blur-md p-3 sm:p-6 md:p-8 rounded-2xl shadow-xl animate-fade-in h-full"
               style={{ animationDelay: "0.1s" }}>
               {/* Title */}
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-3 md:mb-6 text-custom-darkBlue1 animate-fade-in"
-                style={{ animationDelay: "0.21s" }}>
-                <span className="text-custom-gold">Aptitude</span>
-                <span className="ml-2">Ace</span>
-              </h1>
+              <div className="flex justify-between items-center mb-3 md:mb-6">
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-custom-darkBlue1 animate-fade-in"
+                  style={{ animationDelay: "0.21s" }}>
+                  <span className="text-custom-gold">Aptitude</span>
+                  <span className="ml-2">Ace</span>
+                </h1>
+                
+                {isAuthenticated && (
+                  <Link to="/profile" className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2 border-custom-darkBlue1 text-custom-darkBlue1"
+                    >
+                      <UserIcon className="h-4 w-4" />
+                      <span className="hidden sm:inline">Profile</span>
+                    </Button>
+                  </Link>
+                )}
+              </div>
 
               <p className="text-lg sm:text-xl mb-6 md:mb-8 text-custom-darkBlue2 max-w-2xl animate-fade-in"
                 style={{ animationDelay: "0.3s" }}>
@@ -62,10 +79,25 @@ const HomePage = () => {
               </div>
 
               {/* Call to Action */}
-              <HomeActions
-                onSignUp={() => handleOpenAuthModal("signup")}
-                onLogin={() => handleOpenAuthModal("login")}
-              />
+              {!isAuthenticated && (
+                <HomeActions
+                  onSignUp={() => handleOpenAuthModal("signup")}
+                  onLogin={() => handleOpenAuthModal("login")}
+                />
+              )}
+              
+              {isAuthenticated && (
+                <div className="mt-6 animate-fade-in" style={{ animationDelay: "0.8s" }}>
+                  <p className="text-center text-custom-darkBlue2 mb-2">
+                    Welcome back, {user?.name || "User"}!
+                  </p>
+                  <Link to="/aptitude" className="w-full block">
+                    <Button className="w-full bg-custom-gold text-custom-darkBlue1 hover:bg-custom-gold/90 py-6 text-lg font-semibold">
+                      Continue Training
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
@@ -83,7 +115,7 @@ const HomePage = () => {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={handleCloseAuthModal}
-        onAuthenticated={handleAuthenticated}
+        onAuthenticated={() => {}}
         defaultView={authModalView}
       />
     </MainLayout>
