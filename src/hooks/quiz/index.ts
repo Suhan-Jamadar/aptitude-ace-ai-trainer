@@ -5,3 +5,5 @@ export * from "./useQuizTimer";
 export * from "./useQuizScoring";
 export * from "./useQuizStorage";
 export * from "./useQuizResults";
+export * from "./useDailyChallengeResults";
+export * from "./useGrandTestResults";

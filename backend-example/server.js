@@ -19,6 +19,7 @@ const questionRoutes = require('./routes/questions');
 const flashcardRoutes = require('./routes/flashcards');
 const userProgressRoutes = require('./routes/userProgress');
 const grandTestRoutes = require('./routes/grandTest');
+const quizResultRoutes = require('./routes/quizResults');
 
 // Load environment variables
 dotenv.config();
@@ -46,6 +47,7 @@ app.use('/api/users', userProgressRoutes);
 app.use('/api/users', flashcardRoutes);
 app.use('/api/daily-challenge', questionRoutes);
 app.use('/api/grand-test', grandTestRoutes);
+app.use('/api/quiz-results', quizResultRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

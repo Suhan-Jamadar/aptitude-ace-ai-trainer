@@ -1,4 +1,3 @@
-
 import { Question, Topic } from "@/types";
 
 // API base URL that will come from environment variables
@@ -79,7 +78,7 @@ export const getDailyChallenge = async (): Promise<Question[]> => {
  */
 export const getGrandTestQuestions = async (): Promise<Question[]> => {
   try {
-    return await apiRequest('/grand-test');
+    return await apiRequest('/grand-test/questions');
   } catch (error) {
     console.error('Get grand test error:', error);
     throw error;
@@ -120,6 +119,66 @@ export const submitQuizResult = async (
     });
   } catch (error) {
     console.error('Submit quiz result error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Submit daily challenge results
+ * @param {number} score - The score percentage (0-100)
+ * @param {number} timeSpent - Time spent in seconds
+ * @param {number} questionsAttempted - Number of questions attempted
+ * @param {number} correctAnswers - Number of correct answers
+ * @returns {Promise<void>}
+ */
+export const submitDailyChallengeResult = async (
+  score: number,
+  timeSpent: number,
+  questionsAttempted: number,
+  correctAnswers: number
+): Promise<void> => {
+  try {
+    await apiRequest('/daily-challenge/results', {
+      method: 'POST',
+      body: JSON.stringify({
+        score,
+        timeSpent,
+        questionsAttempted,
+        correctAnswers
+      }),
+    });
+  } catch (error) {
+    console.error('Submit daily challenge result error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Submit grand test results
+ * @param {number} score - The score percentage (0-100)
+ * @param {number} timeSpent - Time spent in seconds
+ * @param {number} questionsAttempted - Number of questions attempted
+ * @param {number} correctAnswers - Number of correct answers
+ * @returns {Promise<void>}
+ */
+export const submitGrandTestResult = async (
+  score: number,
+  timeSpent: number,
+  questionsAttempted: number,
+  correctAnswers: number
+): Promise<void> => {
+  try {
+    await apiRequest('/grand-test/results', {
+      method: 'POST',
+      body: JSON.stringify({
+        score,
+        timeSpent,
+        questionsAttempted,
+        correctAnswers
+      }),
+    });
+  } catch (error) {
+    console.error('Submit grand test result error:', error);
     throw error;
   }
 };

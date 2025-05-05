@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const Question = require('../models/Question');
+const DailyChallengeResult = require('../models/DailyChallengeResult');
 
 /**
  * @route GET /api/daily-challenge
@@ -39,13 +40,22 @@ router.post('/results', auth, async (req, res) => {
   try {
     const { score, timeSpent, questionsAttempted, correctAnswers } = req.body;
     
-    // Here you would typically save these results to a DailyChallenge model
-    // For now, we'll just return success since we haven't defined that model yet
+    // Create new daily challenge result
+    const dailyChallengeResult = new DailyChallengeResult({
+      user: req.user.id,
+      score,
+      timeSpent,
+      questionsAttempted,
+      correctAnswers
+    });
+    
+    // Save to database
+    await dailyChallengeResult.save();
     
     res.json({ 
       success: true,
       message: 'Daily challenge results recorded',
-      data: { score, timeSpent, questionsAttempted, correctAnswers }
+      data: dailyChallengeResult
     });
   } catch (err) {
     console.error(err.message);

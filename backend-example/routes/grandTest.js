@@ -4,6 +4,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 const Question = require('../models/Question');
+const GrandTestResult = require('../models/GrandTestResult');
 
 /**
  * @route GET /api/grand-test/questions
@@ -46,20 +47,22 @@ router.post('/results', auth, async (req, res) => {
   try {
     const { score, timeSpent, questionsAttempted, correctAnswers } = req.body;
     
-    // Here you would typically save these results to a GrandTestResult model
-    // For now, we'll just return success since we haven't defined that model yet
+    // Create new grand test result
+    const grandTestResult = new GrandTestResult({
+      user: req.user.id,
+      score,
+      timeSpent,
+      questionsAttempted,
+      correctAnswers
+    });
+    
+    // Save to database
+    await grandTestResult.save();
     
     res.json({ 
       success: true,
       message: 'Grand test results recorded',
-      data: { 
-        userId: req.user.id,
-        score, 
-        timeSpent, 
-        date: new Date(),
-        questionsAttempted, 
-        correctAnswers 
-      }
+      data: grandTestResult
     });
   } catch (err) {
     console.error(err.message);
