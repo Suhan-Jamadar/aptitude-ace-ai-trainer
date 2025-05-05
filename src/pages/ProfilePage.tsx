@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Graduation, Book, Chart } from "lucide-react";
+import { GraduationCap, Book, BarChart } from "lucide-react";
 
 const ProfilePage = () => {
   const { user, isAuthenticated, isLoading, logout, refreshUserProfile } = useAuth();
@@ -114,7 +114,7 @@ const ProfilePage = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg">
-                      <Graduation className="h-8 w-8 text-custom-gold" />
+                      <GraduationCap className="h-8 w-8 text-custom-gold" />
                       <div>
                         <p className="text-sm text-gray-500">Topics Completed</p>
                         <p className="font-medium text-lg">{user.progress?.topicsCompleted || 0}</p>
@@ -130,7 +130,7 @@ const ProfilePage = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg">
-                      <Chart className="h-8 w-8 text-custom-darkBlue2" />
+                      <BarChart className="h-8 w-8 text-custom-darkBlue2" />
                       <div>
                         <p className="text-sm text-gray-500">Average Score</p>
                         <p className="font-medium text-lg">Coming soon</p>

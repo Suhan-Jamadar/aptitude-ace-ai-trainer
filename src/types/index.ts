@@ -6,6 +6,11 @@ export interface User {
   email: string;
   streak: number;
   joinDate: Date;
+  progress?: {
+    topicsCompleted: number;
+    grandTestUnlocked: boolean;
+    averageScore?: number;
+  };
 }
 
 // Auth types
