@@ -4,6 +4,8 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Question = require('../models/Question');
 const DailyChallengeResult = require('../models/DailyChallengeResult');
+const Topic = require('../models/Topic');
+const mongoose = require('mongoose');
 
 /**
  * @route GET /api/daily-challenge
@@ -12,19 +14,78 @@ const DailyChallengeResult = require('../models/DailyChallengeResult');
  */
 router.get('/', async (req, res) => {
   try {
-    // Logic to fetch or generate daily challenge
-    // For now, we'll randomly select 5 questions from the database
-    const count = await Question.countDocuments();
-    const random = Math.floor(Math.random() * (count - 5));
+    // Get today's date (YYYY-MM-DD format) to create a consistent seed for a given day
+    const today = new Date().toISOString().split('T')[0];
     
+    // Create a deterministic seed based on the date
+    const seed = today.split('-').reduce((acc, val) => acc + parseInt(val), 0);
+    
+    // Count total questions in the database
+    const count = await Question.countDocuments();
+    
+    if (count < 5) {
+      return res.status(404).json({ message: 'Not enough questions available for daily challenge' });
+    }
+    
+    // Use the seed to generate a random starting point for questions
+    const random = Math.floor((seed % count) / 5) * 5; // Ensures we get 5 questions without going out of bounds
+    
+    // Fetch 5 questions for daily challenge
     const dailyQuestions = await Question.find()
       .skip(random)
       .limit(5);
     
-    // You might want to implement logic to ensure the same user 
-    // gets the same questions for a given day
+    // Transform to expected format
+    const formattedQuestions = dailyQuestions.map(q => ({
+      id: q._id,
+      topicId: q.topicId,
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation
+    }));
     
-    res.json(dailyQuestions);
+    res.json(formattedQuestions);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+/**
+ * @route GET /api/topics/:topicId/questions
+ * @desc Get questions for a specific topic
+ * @access Public
+ */
+router.get('/topics/:topicId/questions', async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    
+    // Validate if topicId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(topicId)) {
+      return res.status(400).json({ message: 'Invalid topic ID format' });
+    }
+    
+    // Check if topic exists
+    const topicExists = await Topic.findById(topicId);
+    if (!topicExists) {
+      return res.status(404).json({ message: 'Topic not found' });
+    }
+    
+    // Fetch questions for the topic
+    const questions = await Question.find({ topicId });
+    
+    // Transform to expected format
+    const formattedQuestions = questions.map(q => ({
+      id: q._id,
+      topicId: q.topicId,
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation
+    }));
+    
+    res.json(formattedQuestions);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -70,18 +131,126 @@ router.post('/results', auth, async (req, res) => {
  */
 router.post('/', auth, async (req, res) => {
   try {
-    const { topicId, question, options, correctAnswer, explanation } = req.body;
+    const { topicId, question, options, correctAnswer, explanation, difficulty } = req.body;
+    
+    // Validate topicId format
+    if (!mongoose.Types.ObjectId.isValid(topicId)) {
+      return res.status(400).json({ message: 'Invalid topic ID format' });
+    }
+    
+    // Check if topic exists
+    const topicExists = await Topic.findById(topicId);
+    if (!topicExists) {
+      return res.status(404).json({ message: 'Topic not found' });
+    }
+    
+    // Validate required fields
+    if (!question || !options || !correctAnswer || !explanation) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    
+    // Validate options array
+    if (!Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({ message: 'At least two options are required' });
+    }
+    
+    // Validate correctAnswer exists in options
+    if (!options.includes(correctAnswer)) {
+      return res.status(400).json({ message: 'Correct answer must be included in the options' });
+    }
     
     const newQuestion = new Question({
       topicId,
       question,
       options,
       correctAnswer,
-      explanation
+      explanation,
+      difficulty: difficulty || 'medium'
     });
     
     const savedQuestion = await newQuestion.save();
-    res.json(savedQuestion);
+    
+    // Return formatted question
+    const formattedQuestion = {
+      id: savedQuestion._id,
+      topicId: savedQuestion.topicId,
+      question: savedQuestion.question,
+      options: savedQuestion.options,
+      correctAnswer: savedQuestion.correctAnswer,
+      explanation: savedQuestion.explanation,
+      difficulty: savedQuestion.difficulty
+    };
+    
+    res.json(formattedQuestion);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+/**
+ * @route PUT /api/questions/:id
+ * @desc Update an existing question
+ * @access Private (admin)
+ */
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { topicId, question, options, correctAnswer, explanation, difficulty } = req.body;
+    
+    // Find and update the question
+    const updatedQuestion = await Question.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          topicId: topicId,
+          question: question,
+          options: options,
+          correctAnswer: correctAnswer,
+          explanation: explanation,
+          difficulty: difficulty || 'medium'
+        }
+      },
+      { new: true } // Return the updated document
+    );
+    
+    if (!updatedQuestion) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    
+    // Return formatted question
+    const formattedQuestion = {
+      id: updatedQuestion._id,
+      topicId: updatedQuestion.topicId,
+      question: updatedQuestion.question,
+      options: updatedQuestion.options,
+      correctAnswer: updatedQuestion.correctAnswer,
+      explanation: updatedQuestion.explanation,
+      difficulty: updatedQuestion.difficulty
+    };
+    
+    res.json(formattedQuestion);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+/**
+ * @route DELETE /api/questions/:id
+ * @desc Delete a question
+ * @access Private (admin)
+ */
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+    
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    
+    await question.remove();
+    
+    res.json({ message: 'Question deleted' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

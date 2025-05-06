@@ -261,3 +261,76 @@ export const getQuizHistory = async (userId: string, topicId: string): Promise<a
     throw error;
   }
 };
+
+/**
+ * Add a new question to the database (admin function)
+ * @param {string} topicId - The topic identifier
+ * @param {string} question - The question text
+ * @param {string[]} options - Array of options
+ * @param {string} correctAnswer - The correct answer (must be one of the options)
+ * @param {string} explanation - Explanation for the answer
+ * @param {string} difficulty - Difficulty level (easy, medium, hard)
+ * @returns {Promise<Question>} The newly created question
+ */
+export const addQuestion = async (
+  topicId: string,
+  question: string,
+  options: string[],
+  correctAnswer: string,
+  explanation: string,
+  difficulty: string = 'medium'
+): Promise<Question> => {
+  try {
+    return await apiRequest('/daily-challenge', {
+      method: 'POST',
+      body: JSON.stringify({
+        topicId,
+        question,
+        options,
+        correctAnswer,
+        explanation,
+        difficulty
+      }),
+    });
+  } catch (error) {
+    console.error('Add question error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing question (admin function)
+ * @param {string} questionId - The question identifier
+ * @param {object} questionData - The updated question data
+ * @returns {Promise<Question>} The updated question
+ */
+export const updateQuestion = async (
+  questionId: string,
+  questionData: Partial<Question>
+): Promise<Question> => {
+  try {
+    return await apiRequest(`/questions/${questionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(questionData),
+    });
+  } catch (error) {
+    console.error('Update question error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a question (admin function)
+ * @param {string} questionId - The question identifier
+ * @returns {Promise<void>}
+ */
+export const deleteQuestion = async (questionId: string): Promise<void> => {
+  try {
+    await apiRequest(`/questions/${questionId}`, {
+      method: 'DELETE',
+    });
+  } catch (error) {
+    console.error('Delete question error:', error);
+    throw error;
+  }
+};
