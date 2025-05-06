@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,6 +60,7 @@ const AuthModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
+        <DialogTitle className="sr-only">Authentication</DialogTitle>
         {view === "login" ? (
           <LoginForm
             onLoginSubmit={handleLoginSubmit}

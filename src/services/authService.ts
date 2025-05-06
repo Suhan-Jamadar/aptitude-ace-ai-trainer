@@ -17,6 +17,7 @@ const apiRequest = async (endpoint: string, options = {}) => {
         'Content-Type': 'application/json',
       },
       credentials: 'include' as RequestCredentials,
+      mode: 'cors' as RequestMode,
     };
 
     // Merge options
@@ -112,31 +113,6 @@ export const signup = async (
 };
 
 /**
- * Refresh the authentication token
- */
-export const refreshToken = async (): Promise<boolean> => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      return false;
-    }
-
-    const data = await apiRequest('/auth/refresh-token', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    localStorage.setItem('token', data.token);
-    return true;
-  } catch (error) {
-    console.error('Token refresh error:', error);
-    return false;
-  }
-};
-
-/**
  * Logout the current user
  */
 export const logout = async (): Promise<void> => {
@@ -210,34 +186,6 @@ export const getUserProfile = async (): Promise<User> => {
     return userData.user;
   } catch (error) {
     console.error('Get user profile error:', error);
-    throw error;
-  }
-};
-
-/**
- * Update user profile information
- */
-export const updateUserProfile = async (userId: string, profileData: Partial<User>): Promise<User> => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const userData = await apiRequest('/auth/profile', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(profileData),
-    });
-    
-    // Update stored user data
-    setCurrentUser(userData.user);
-    
-    return userData.user;
-  } catch (error) {
-    console.error('Update user profile error:', error);
     throw error;
   }
 };
