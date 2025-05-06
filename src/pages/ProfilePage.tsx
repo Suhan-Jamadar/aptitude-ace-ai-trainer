@@ -96,12 +96,6 @@ const ProfilePage = () => {
                       <p className="text-sm text-gray-500">Current Streak</p>
                       <p className="font-medium">{user.streak || 0} days</p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Member Since</p>
-                      <p className="font-medium">
-                        {user.joinDate ? new Date(user.joinDate).toLocaleDateString() : "N/A"}
-                      </p>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -133,7 +127,9 @@ const ProfilePage = () => {
                       <BarChart className="h-8 w-8 text-custom-darkBlue2" />
                       <div>
                         <p className="text-sm text-gray-500">Average Score</p>
-                        <p className="font-medium text-lg">Coming soon</p>
+                        <p className="font-medium text-lg">
+                          {user.progress?.averageScore ? `${user.progress.averageScore}%` : 'N/A'}
+                        </p>
                       </div>
                     </div>
                   </div>

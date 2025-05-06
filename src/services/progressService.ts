@@ -37,7 +37,7 @@ const apiRequest = async (endpoint: string, options = {}) => {
       throw new Error(errorData.message || 'API request failed');
     }
     
-    return response.json();
+    return await response.json();
   } catch (error) {
     console.error(`Progress API Request failed for ${endpoint}:`, error);
     throw error;
@@ -153,7 +153,7 @@ export const submitGrandTestResult = async (
         userId,
         score,
         timeSpent,
-        date: new Date(),
+        date: new Date().toISOString(),
         questionsAttempted,
         correctAnswers
       }),

@@ -4,7 +4,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -37,7 +36,7 @@ const AuthModal = ({
       handleAuthenticated();
     } catch (error) {
       console.error("AuthModal: Login error:", error);
-      // Toast is already shown in the AuthContext
+      // Error is already handled in the AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +51,7 @@ const AuthModal = ({
       handleAuthenticated();
     } catch (error) {
       console.error("AuthModal: Signup error:", error);
-      // Toast is already shown in the AuthContext
+      // Error is already handled in the AuthContext
     } finally {
       setIsLoading(false);
     }

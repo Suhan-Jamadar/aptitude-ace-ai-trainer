@@ -20,9 +20,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Check token validity and auto-refresh on expiration
+  // Check token and load user on initial load
   useEffect(() => {
-    const checkTokenValidity = async () => {
+    const loadUser = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setIsLoading(false);
@@ -30,58 +30,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       try {
-        console.log('Checking token validity...');
-        // Get the stored user and check if token is valid by fetching profile
+        console.log('Checking stored auth token...');
         await refreshUserProfile();
-        console.log('Token is valid');
+        console.log('User loaded successfully');
       } catch (error) {
-        // Token is invalid, attempt to refresh it
-        console.error("Token validation error:", error);
-        const refreshed = await authService.refreshToken();
-        
-        if (!refreshed) {
-          // If refresh failed, clear user data
-          console.log('Token refresh failed, logging out');
-          setUser(null);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        } else {
-          console.log('Token refreshed successfully');
-          try {
-            await refreshUserProfile();
-          } catch (err) {
-            console.error("Unable to get user profile after token refresh:", err);
-            setUser(null);
-          }
-        }
+        console.error("Auth token validation error:", error);
+        // Clear invalid auth data
+        setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       } finally {
         setIsLoading(false);
       }
     };
     
-    checkTokenValidity();
-    
-    // Set up periodic check every hour
-    const tokenCheckInterval = setInterval(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        authService.refreshToken();
-      }
-    }, 60 * 60 * 1000); // 1 hour
-    
-    return () => clearInterval(tokenCheckInterval);
-  }, []);
-  
-  // Check if user is logged in on initial load
-  useEffect(() => {
-    console.log('Checking for stored user data...');
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      console.log('Found stored user:', currentUser);
-    } else {
-      console.log('No stored user found');
-    }
-    setUser(currentUser);
+    loadUser();
   }, []);
 
   const refreshUserProfile = async () => {
@@ -151,6 +114,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Logout failed");
+      // Still clear user state on client side
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
