@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
@@ -14,6 +13,11 @@ const auth = require('../middleware/auth');
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    // Basic validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please enter all fields' });
+    }
 
     // Check if user already exists
     let user = await User.findOne({ email });
@@ -47,7 +51,7 @@ router.post('/signup', async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN },
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
       (err, token) => {
         if (err) throw err;
         
@@ -71,8 +75,8 @@ router.post('/signup', async (req, res) => {
       }
     );
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Signup error:', err);
+    res.status(500).json({ message: 'Server error during signup' });
   }
 });
 

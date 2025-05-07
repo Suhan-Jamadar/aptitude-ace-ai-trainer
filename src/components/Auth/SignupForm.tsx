@@ -3,15 +3,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Lock, ArrowRight } from "lucide-react";
+import { User, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 
 interface SignupFormProps {
   onSignupSubmit: (name: string, email: string, password: string) => void;
   onSwitchToLogin: () => void;
   isLoading: boolean;
+  error?: string;
 }
 
-const SignupForm = ({ onSignupSubmit, onSwitchToLogin, isLoading }: SignupFormProps) => {
+const SignupForm = ({ onSignupSubmit, onSwitchToLogin, isLoading, error }: SignupFormProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +37,13 @@ const SignupForm = ({ onSignupSubmit, onSwitchToLogin, isLoading }: SignupFormPr
         <h2 className="text-2xl font-bold text-custom-darkBlue1">Create Account</h2>
         <p className="text-gray-600">Join Aptitude Ace and start your training journey</p>
       </div>
+      
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
+          <AlertCircle className="h-4 w-4 mr-2" />
+          <span className="text-sm">{error}</span>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
@@ -82,6 +90,7 @@ const SignupForm = ({ onSignupSubmit, onSwitchToLogin, isLoading }: SignupFormPr
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
             />
           </div>
         </div>

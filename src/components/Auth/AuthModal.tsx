@@ -20,6 +20,7 @@ const AuthModal = ({
 }: AuthModalProps) => {
   const [view, setView] = useState<"login" | "signup">(defaultView);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const { login, signup } = useAuth();
   
   const handleAuthenticated = () => {
@@ -29,13 +30,15 @@ const AuthModal = ({
 
   const handleLoginSubmit = async (email: string, password: string) => {
     setIsLoading(true);
+    setError("");
     try {
       console.log(`AuthModal: Attempting login for ${email}`);
       await login(email, password);
       console.log('AuthModal: Login successful');
       handleAuthenticated();
-    } catch (error) {
+    } catch (error: any) {
       console.error("AuthModal: Login error:", error);
+      setError(error?.message || "Login failed. Please try again.");
       // Error is already handled in the AuthContext
     } finally {
       setIsLoading(false);
@@ -44,13 +47,15 @@ const AuthModal = ({
 
   const handleSignupSubmit = async (name: string, email: string, password: string) => {
     setIsLoading(true);
+    setError("");
     try {
       console.log(`AuthModal: Attempting signup for ${email}`);
       await signup(name, email, password);
       console.log('AuthModal: Signup successful');
       handleAuthenticated();
-    } catch (error) {
+    } catch (error: any) {
       console.error("AuthModal: Signup error:", error);
+      setError(error?.message || "Signup failed. Please try again.");
       // Error is already handled in the AuthContext
     } finally {
       setIsLoading(false);
@@ -66,12 +71,14 @@ const AuthModal = ({
             onLoginSubmit={handleLoginSubmit}
             onSwitchToSignup={() => setView("signup")}
             isLoading={isLoading}
+            error={error}
           />
         ) : (
           <SignupForm
             onSignupSubmit={handleSignupSubmit}
             onSwitchToLogin={() => setView("login")}
             isLoading={isLoading}
+            error={error}
           />
         )}
       </DialogContent>

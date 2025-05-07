@@ -35,17 +35,19 @@ const apiRequest = async (endpoint: string, options = {}) => {
     // Make the request
     const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
     
+    // Parse the response data even if it's an error
+    const data = await response.json().catch(() => ({ 
+      message: `Error ${response.status}: ${response.statusText}` 
+    }));
+    
     // Handle non-OK responses
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ 
-        message: `Error ${response.status}: ${response.statusText}` 
-      }));
-      console.error(`API Error (${response.status}):`, errorData);
-      throw new Error(errorData.message || `API request failed with status ${response.status}`);
+      console.error(`API Error (${response.status}):`, data);
+      throw new Error(data.message || `API request failed with status ${response.status}`);
     }
     
     // Return successful response data
-    return await response.json();
+    return data;
   } catch (error) {
     console.error(`API Request failed for ${endpoint}:`, error);
     throw error;
