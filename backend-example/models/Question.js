@@ -22,15 +22,6 @@ const QuestionSchema = new mongoose.Schema({
   explanation: {
     type: String,
     required: true
-  },
-  difficulty: {
-    type: String,
-    enum: ['easy', 'medium', 'hard'],
-    default: 'medium'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
   }
 });
 

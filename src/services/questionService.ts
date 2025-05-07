@@ -1,3 +1,4 @@
+
 import { Question, Topic } from "@/types";
 
 // API base URL that will come from environment variables
@@ -269,7 +270,6 @@ export const getQuizHistory = async (userId: string, topicId: string): Promise<a
  * @param {string[]} options - Array of options
  * @param {string} correctAnswer - The correct answer (must be one of the options)
  * @param {string} explanation - Explanation for the answer
- * @param {string} difficulty - Difficulty level (easy, medium, hard)
  * @returns {Promise<Question>} The newly created question
  */
 export const addQuestion = async (
@@ -277,8 +277,7 @@ export const addQuestion = async (
   question: string,
   options: string[],
   correctAnswer: string,
-  explanation: string,
-  difficulty: string = 'medium'
+  explanation: string
 ): Promise<Question> => {
   try {
     return await apiRequest('/daily-challenge', {
@@ -288,8 +287,7 @@ export const addQuestion = async (
         question,
         options,
         correctAnswer,
-        explanation,
-        difficulty
+        explanation
       }),
     });
   } catch (error) {

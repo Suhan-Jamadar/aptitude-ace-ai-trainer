@@ -124,14 +124,16 @@ router.post('/results', auth, async (req, res) => {
   }
 });
 
+// Basic CRUD operations for questions
+
 /**
  * @route POST /api/daily-challenge
- * @desc Admin route to add a new daily challenge question
+ * @desc Add a new question
  * @access Private (admin)
  */
 router.post('/', auth, async (req, res) => {
   try {
-    const { topicId, question, options, correctAnswer, explanation, difficulty } = req.body;
+    const { topicId, question, options, correctAnswer, explanation } = req.body;
     
     // Validate topicId format
     if (!mongoose.Types.ObjectId.isValid(topicId)) {
@@ -164,8 +166,7 @@ router.post('/', auth, async (req, res) => {
       question,
       options,
       correctAnswer,
-      explanation,
-      difficulty: difficulty || 'medium'
+      explanation
     });
     
     const savedQuestion = await newQuestion.save();
@@ -177,8 +178,7 @@ router.post('/', auth, async (req, res) => {
       question: savedQuestion.question,
       options: savedQuestion.options,
       correctAnswer: savedQuestion.correctAnswer,
-      explanation: savedQuestion.explanation,
-      difficulty: savedQuestion.difficulty
+      explanation: savedQuestion.explanation
     };
     
     res.json(formattedQuestion);
@@ -195,7 +195,7 @@ router.post('/', auth, async (req, res) => {
  */
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { topicId, question, options, correctAnswer, explanation, difficulty } = req.body;
+    const { topicId, question, options, correctAnswer, explanation } = req.body;
     
     // Find and update the question
     const updatedQuestion = await Question.findByIdAndUpdate(
@@ -206,8 +206,7 @@ router.put('/:id', auth, async (req, res) => {
           question: question,
           options: options,
           correctAnswer: correctAnswer,
-          explanation: explanation,
-          difficulty: difficulty || 'medium'
+          explanation: explanation
         }
       },
       { new: true } // Return the updated document
@@ -224,8 +223,7 @@ router.put('/:id', auth, async (req, res) => {
       question: updatedQuestion.question,
       options: updatedQuestion.options,
       correctAnswer: updatedQuestion.correctAnswer,
-      explanation: updatedQuestion.explanation,
-      difficulty: updatedQuestion.difficulty
+      explanation: updatedQuestion.explanation
     };
     
     res.json(formattedQuestion);
